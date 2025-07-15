@@ -6,4 +6,8 @@
     <RootNamespace>RdcEngine</RootNamespace>
   </PropertyGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="RdcTest" />
+  </ItemGroup>
+
 </Project>
