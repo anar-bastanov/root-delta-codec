@@ -6,11 +6,11 @@ internal static class RootDeltaTransform
 {
     public static RawImage EncodeImage(RawImage rawImage)
     {
-        throw new NotImplementedException();
+        return rawImage with { Data = rawImage.Data[..] };
     }
 
     public static RawImage DecodeImage(RawImage rawImage)
     {
-        throw new NotImplementedException();
+        return rawImage with { Data = rawImage.Data[..] };
     }
 }

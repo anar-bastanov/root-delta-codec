@@ -38,16 +38,15 @@ internal static class StreamValidator
             throw new ArgumentException("Input and output streams must not be the same", paramName2);
     }
 
-    public static void EnsureRemaining(Stream stream, long neededBytes,
+    public static void EnsureRemaining(Stream stream, ulong neededBytes,
         [CallerArgumentExpression(nameof(stream))] string? paramName = null)
     {
         ArgumentNullException.ThrowIfNull(stream, paramName);
-        ArgumentOutOfRangeException.ThrowIfNegative(neededBytes);
 
         if (!stream.CanSeek)
             throw new NotSupportedException("Cannot check length on non-seekable stream");
 
-        if (stream.Length - stream.Position < neededBytes)
+        if ((ulong)(stream.Length - stream.Position) < neededBytes)
             throw new InvalidDataException($"Stream does not contain the required {neededBytes} bytes");
     }
 }
