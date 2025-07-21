@@ -12,6 +12,8 @@ public static class ImageCodec
 
         RawImage bmpRawImage = BmpFormat.Load(bmpInput);
         RawImage rdiRawImage = RootDeltaTransform.EncodeImage(bmpRawImage);
+
+        rdiRawImage.Data = RawDataCompressor.Compress(rdiRawImage.Data);
         RdiFormat.Save(rdiRawImage, rdiOutput);
     }
 
@@ -22,6 +24,8 @@ public static class ImageCodec
         StreamValidator.EnsureNotSame(rdiInput, bmpOutput);
 
         RawImage rdiRawImage = RdiFormat.Load(rdiInput);
+        rdiRawImage.Data = RawDataCompressor.Decompress(rdiRawImage.Data);
+
         RawImage bmpRawImage = RootDeltaTransform.DecodeImage(rdiRawImage);
         BmpFormat.Save(bmpRawImage, bmpOutput);
     }
