@@ -131,6 +131,7 @@ internal static class BmpFormat
         for (uint i = 0, size = width * channels, pad = stride - size; i < pixelDataSize; i += stride)
         {
             bmpOutput.Write(data, (int)i, (int)size);
+
             for (uint j = 0; j < pad; ++j)
                 bmpOutput.WriteByte(0);
         }
@@ -138,8 +139,7 @@ internal static class BmpFormat
 
     private static void FlipVertically(byte[] data, int stride, int rows)
     {
-        int top = 0, bot = rows * stride;
-        while (top < bot)
+        for (int top = 0, bot = rows * stride; top < bot; )
         {
             bot -= stride;
             Span<byte> a = data.AsSpan(top, stride);
