@@ -4,7 +4,7 @@ namespace RdcEngine;
 
 public static class ImageCodec
 {
-    public static void Encode(Stream bmpInput, Stream rdiOutput)
+    public static void EncodeBmp(Stream bmpInput, Stream rdiOutput)
     {
         StreamValidator.EnsureReadable(bmpInput);
         StreamValidator.EnsureWritable(rdiOutput);
@@ -17,7 +17,7 @@ public static class ImageCodec
         RdiFormat.Save(rdiRawImage, rdiOutput);
     }
 
-    public static void Decode(Stream rdiInput, Stream bmpOutput)
+    public static void DecodeBmp(Stream rdiInput, Stream bmpOutput)
     {
         StreamValidator.EnsureReadable(rdiInput);
         StreamValidator.EnsureWritable(bmpOutput);
