@@ -1,4 +1,4 @@
-﻿using RdcEngine;
+﻿using RdcEngine.Image;
 using System;
 using System.IO;
 using static RdcCli.MediaFormat;
@@ -7,8 +7,8 @@ namespace RdcCli;
 
 public static class CommandHandler
 {
-    private static void SafeOverwrite
-        (Action<(MediaFormat From, MediaFormat To), FileStream, FileStream> handler,
+    private static void SafeOverwrite(
+        Action<(MediaFormat From, MediaFormat To), FileStream, FileStream> handler,
         (string From, string To) userExtensions, FileInfo input, FileInfo output)
     {
         using var inputStream = input.OpenRead();
@@ -35,24 +35,27 @@ public static class CommandHandler
     }
 
     public static void RunEncode(
-        (string From, string To) userExtensions, FileInfo input, FileInfo output)
+        (string From, string To) userExtensions, FileInfo input, FileInfo output, ushort version, ushort mode)
     {
-        SafeOverwrite(RunEncodeInternal, userExtensions, input, output);
+        SafeOverwrite((e, i, o) => RunEncodeInternal(e, i, o, version, mode),
+            userExtensions, input, output);
     }
 
     public static void RunDecode(
         (string From, string To) userExtensions, FileInfo input, FileInfo output)
     {
-        SafeOverwrite(RunDecodeInternal, userExtensions, input, output);
+        SafeOverwrite(RunDecodeInternal,
+            userExtensions, input, output);
     }
 
     public static void RunEncodeInternal(
-        (MediaFormat From, MediaFormat To) mediaFormats, FileStream inputStream, FileStream outputStream)
+        (MediaFormat From, MediaFormat To) mediaFormats, FileStream inputStream, FileStream outputStream,
+        ushort version, ushort mode)
     {
         switch (mediaFormats)
         {
             case (BmpImage, RdiImage):
-                ImageCodec.EncodeBmp(inputStream, outputStream);
+                ImageCodec.EncodeBmp(inputStream, outputStream, version, mode);
                 break;
             case (PngImage, RdiImage):
             case (JpegImage, RdiImage):

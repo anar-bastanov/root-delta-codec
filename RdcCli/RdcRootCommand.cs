@@ -29,9 +29,35 @@ public readonly struct RdcRootCommand(CommandLineConfiguration Command)
         formatsOption.Description = "Media formats as FROM:TO";
         formatsOption.CustomParser = result =>
         {
-            var value = result.Tokens.Single().Value;
+            string value = result.Tokens.Single().Value;
             var extensions = value.Split(':', 2, StringSplitOptions.TrimEntries);
+
             return (extensions[0], extensions.Length is 2 ? extensions[1] : "");
+        };
+
+        var specOption = new Option<ushort>("--spec");
+        specOption.Aliases.Add("-s");
+        specOption.Description = "Codec version";
+        specOption.CustomParser = result =>
+        {
+            string value = result.Tokens.Single().Value;
+            var version = value.Split('.', 2);
+            bool hasMinor = version.Length is 2 && !string.IsNullOrWhiteSpace(version[1]);
+
+            if (!byte.TryParse(version[0], out byte major))                  major = byte.MaxValue;
+            if (!byte.TryParse(hasMinor ? version[1] : "0", out byte minor)) minor = byte.MaxValue;
+
+            return (ushort)((major << 8) | (minor << 0));
+        };
+
+        var modeOption = new Option<ushort>("--mode");
+        modeOption.Aliases.Add("-m");
+        modeOption.Description = "Encoding mode";
+        modeOption.CustomParser = result =>
+        {
+            string value = result.Tokens.Single().Value;
+
+            return ushort.TryParse(value, out ushort mode) ? mode : ushort.MaxValue;
         };
 
         var inputArg = new Argument<FileInfo>("input");
@@ -43,6 +69,8 @@ public readonly struct RdcRootCommand(CommandLineConfiguration Command)
         outputArg.AcceptLegalFilePathsOnly();
 
         encodeCommand.Add(formatsOption);
+        encodeCommand.Add(specOption);
+        encodeCommand.Add(modeOption);
         encodeCommand.Add(inputArg);
         encodeCommand.Add(outputArg);
 
@@ -59,10 +87,12 @@ public readonly struct RdcRootCommand(CommandLineConfiguration Command)
         encodeCommand.SetAction(TryCatchBlock(root, parseResult =>
         {
             var formats = parseResult.GetValue(formatsOption);
+            ushort version = parseResult.GetValue(specOption);
+            ushort mode = parseResult.GetValue(modeOption);
             var input = parseResult.GetValue(inputArg)!;
             var output = parseResult.GetValue(outputArg)!;
 
-            CommandHandler.RunEncode(formats, input, output);
+            CommandHandler.RunEncode(formats, input, output, version, mode);
         }));
 
         decodeCommand.SetAction(TryCatchBlock(root, parseResult =>

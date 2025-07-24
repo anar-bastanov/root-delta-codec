@@ -1,4 +1,4 @@
-﻿namespace RdcEngine;
+﻿namespace RdcEngine.Image;
 
 internal record struct RawImage(
     uint Width,

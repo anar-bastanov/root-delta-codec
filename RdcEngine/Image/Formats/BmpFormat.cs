@@ -3,7 +3,7 @@ using System.Buffers.Binary;
 using System.IO;
 using System.Runtime.CompilerServices;
 
-namespace RdcEngine;
+namespace RdcEngine.Image.Formats;
 
 internal static class BmpFormat
 {
@@ -42,13 +42,13 @@ internal static class BmpFormat
             throw new InvalidDataException("Missing BMP signature");
 
         if (dibSize is < DibHeaderSize)
-            throw new NotSupportedException("Unsupported DIB header size");
+            throw new NotSupportedException("Unsupported DIB header size for BMP");
 
         if (offBits < HeaderSize || offBits > fileSize || offBits < dibSize + InfoHeaderSize)
-            throw new InvalidDataException("Invalid pixel data offset");
+            throw new InvalidDataException("Invalid pixel data offset in BMP header");
 
         if (planes is not 1)
-            throw new NotSupportedException("Unsupported number of planes");
+            throw new NotSupportedException("Unsupported number of planes for BMP");
 
         if (bpp is not 24 and not 32)
             throw new NotSupportedException("Only 24-bit and 32-bit BMPs are supported");
@@ -69,7 +69,7 @@ internal static class BmpFormat
 
         ulong expectedEnd = offBits + pixelBytes;
         if (expectedEnd != (ulong)bmpInput.Length)
-            throw new InvalidDataException("BMP size mismatch or pixel data is incomplete");
+            throw new InvalidDataException("BMP size mismatch or incomplete pixel data");
 
         StreamValidator.EnsureRemaining(bmpInput, expectedEnd - HeaderSize);
         bmpInput.Seek(offBits - HeaderSize, SeekOrigin.Current);
@@ -92,19 +92,19 @@ internal static class BmpFormat
         var (width, height, strideInput, channels, data) = rawImage;
 
         if (width is 0 || height is 0)
-            throw new ArgumentException("Width and height must be non-zero", nameof(rawImage));
+            throw new ArgumentException("Width and height of BMP must be non-zero", nameof(rawImage));
 
         if (channels is not 3 and not 4)
-            throw new ArgumentException("Only 24-bit and 32-bit BMPs are supported", nameof(rawImage));
+            throw new ArgumentException("Only 24-bit and 32-bit BMP is supported", nameof(rawImage));
 
         if (strideInput < width * channels)
-            throw new ArgumentException("Stride is too small for width", nameof(rawImage));
+            throw new ArgumentException("Stride of BMP is too small for its width", nameof(rawImage));
 
         uint stride = (width * channels + Alignment - 1) & ~(uint)(Alignment - 1);
         uint pixelDataSize = checked(stride * height);
 
         if (data.Length != pixelDataSize)
-            throw new ArgumentException("Incorrect pixel data length", nameof(rawImage));
+            throw new ArgumentException("BMP size mismatch or incomplete pixel data", nameof(rawImage));
 
         Span<byte> header = stackalloc byte[HeaderSize];
 
