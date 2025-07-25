@@ -1,13 +1,97 @@
 # Root Delta Codec
 
-**`RDC`** is a lossy media codec based on the root delta algorithm.
+**`RDC`** is a lossy media codec framework designed to significantly reduce file sizes while maintaining high perceptual quality. It uses efficient compression algorithms and a unified approach to support various types of content.
 
-It defines its own file formats. The only supported format at the moment is `.rdi` (Root Delta Image), which is used for encoding bitmap images.
+The framework defines an extensible family of formats including:
+
+- **`RDI`** – Root Delta Image
+- **`RDA`** – Root Delta Audio
+- **`RDV`** – Root Delta Video
+- **`RDAI`** – Root Delta Animated Image
 
 ## Status
 
 > [!WARNING]
-> *This project is in development and not ready for general use.*
+> *This project is under active development and not ready for general use.*
+
+## Installation & Build Instructions
+
+You can build RDC from source or download prebuilt binaries from the latest [GitHub Releases](https://github.com/anar-bastanov/root-delta-codec/releases).
+
+To build RDC from source, ensure you have the [.NET 9 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/9.0) installed.
+
+Run the following commands in your terminal to restore dependencies and publish the project:
+
+### Windows
+
+```bash
+dotnet restore
+dotnet publish -c Release -r win-x64 --self-contained true /p:PublishAot=true /p:PublishTrimmed=true /p:TrimMode=link
+```
+
+### Linux
+
+```bash
+dotnet restore
+dotnet publish -c Release -r linux-x64 --self-contained true /p:PublishAot=true /p:PublishTrimmed=true /p:TrimMode=link
+```
+
+### Output
+
+After publishing, the executable will be located at:
+
+- `./bin/Release/net9.0/win-x64/publish/rdc.exe` (Windows)
+- `./bin/Release/net9.0/linux-x64/publish/rdc` (Linux)
+
+## Usage
+
+RDC is available both as a CLI tool and as a .NET library for programmatic use.
+
+### Command-Line Interface
+
+```bash
+rdc encode -f bmp:rdi input.bmp output.rdi
+rdc decode -f rdi:bmp input.rdi output.bmp
+```
+
+Options:
+
+* `--format, -f`: Specifies the conversion formats as `FROM:TO`
+* `--spec, -s`: Selects codec version
+* `--mode, -m`: Sets encoding mode
+* `--help, -h`: Displays available commands and options
+
+The CLI typically infers formats based on file extensions.
+
+### .NET Library
+
+The core encoding/decoding logic lives in `RdcEngine`, while the CLI front-end uses `RdcCli`.
+
+```cs
+using RdcEngine.Image;
+
+{
+    using var inputBmp = File.OpenRead("input.bmp");
+    using var outputRdi = File.Create("output.rdi");
+    ImageCodec.EncodeBmp(inputBmp, outputRdi);
+}
+
+{
+    using var inputRdi = File.OpenRead("input.rdi");
+    using var outputBmp = File.Create("output.bmp");
+    ImageCodec.DecodeBmp(inputRdi, outputBmp);
+}
+```
+
+## Supported Formats
+
+| From            | To                   | Status    |
+| :-------------- | :------------------- | :-------- |
+| `BMP`           | `RDI`                | Supported |
+| `RDI`           | `BMP`                | Supported |
+| `PNG`, `JPEG`   | `RDI`                | Not Yet   |
+| `RDI`           | `PNG`, `JPEG`        | Not Yet   |
+| Video/Audio/GIF | `RDV`, `RDA`, `RDAI` | Planned   |
 
 ## License
 
