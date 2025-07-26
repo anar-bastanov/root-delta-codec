@@ -20,20 +20,20 @@ You can build RDC from source or download prebuilt binaries from the latest [Git
 
 To build RDC from source, ensure you have the [.NET 9 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/9.0) installed.
 
-Run the following commands in your terminal to restore dependencies and publish the project:
+Run the following commands from the root of the repository to restore dependencies and publish the project:
 
 ### Windows
 
 ```bash
 dotnet restore
-dotnet publish -c Release -r win-x64 --self-contained true /p:PublishAot=true /p:PublishTrimmed=true /p:TrimMode=link
+dotnet publish ./RootDeltaCodec.sln -c Release -r win-x64 --self-contained true /p:PublishAot=true /p:PublishTrimmed=true /p:TrimMode=link
 ```
 
 ### Linux
 
 ```bash
 dotnet restore
-dotnet publish -c Release -r linux-x64 --self-contained true /p:PublishAot=true /p:PublishTrimmed=true /p:TrimMode=link
+dotnet publish ./RootDeltaCodec.sln -c Release -r linux-x64 --self-contained true /p:PublishAot=true /p:PublishTrimmed=true /p:TrimMode=link
 ```
 
 ### Output

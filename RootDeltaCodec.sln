@@ -7,8 +7,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RdcEngine", "RdcEngine\RdcE
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RdcCli", "RdcCli\RdcCli.csproj", "{FA7FAEB5-88A8-0A3A-5259-D777922467C2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RdcTest", "RdcTest\RdcTest.csproj", "{005EB37E-4345-4F6F-BDB0-2AE1ACC9568A}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{8EC462FD-D22E-90A8-E5CE-7E832BA40C5D}"
 	ProjectSection(SolutionItems) = preProject
 		.gitattributes = .gitattributes
@@ -31,10 +29,6 @@ Global
 		{FA7FAEB5-88A8-0A3A-5259-D777922467C2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FA7FAEB5-88A8-0A3A-5259-D777922467C2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FA7FAEB5-88A8-0A3A-5259-D777922467C2}.Release|Any CPU.Build.0 = Release|Any CPU
-		{005EB37E-4345-4F6F-BDB0-2AE1ACC9568A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{005EB37E-4345-4F6F-BDB0-2AE1ACC9568A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{005EB37E-4345-4F6F-BDB0-2AE1ACC9568A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{005EB37E-4345-4F6F-BDB0-2AE1ACC9568A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
