@@ -1,5 +1,6 @@
 ﻿using RdcEngine.Image;
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using static RdcCli.MediaFormat;
 
@@ -9,43 +10,45 @@ public static class CommandHandler
 {
     private static void SafeOverwrite(
         Action<(MediaFormat From, MediaFormat To), FileStream, FileStream> handler,
-        (string From, string To) userExtensions, FileInfo input, FileInfo output)
+        (string From, string To) userExtensions, FileInfo input, FileInfo? output,
+        bool overwrite)
     {
-        using var inputStream = input.OpenRead();
-
-        string tempFilePath = Path.Combine(output.DirectoryName ?? Path.GetTempPath(), Path.GetRandomFileName());
+        var tempFile = new FileInfo(Path.Combine(output?.DirectoryName ?? Path.GetTempPath(), Path.GetRandomFileName()));
 
         try
         {
-            using (var tempStream = File.Create(tempFilePath))
-            {
-                var formats = ParseMediaFormats(userExtensions, input, output);
-                handler(formats, inputStream, tempStream);
-            }
+            var formats = InferFileArguments(userExtensions, input, ref output);
 
-            File.Move(tempFilePath, output.FullName, true);
+            if (!overwrite && output.Exists)
+                throw new CommandLineException($"File '{output.Name}' already exists. Use --overwrite to allow replacing it");
+
+            using (var tempStream = tempFile.Create())
+                using (var inputStream = input.OpenRead())
+                    handler(formats, inputStream, tempStream);
+
+            tempFile.MoveTo(output.FullName, true);
         }
         catch
         {
-            if (File.Exists(tempFilePath))
-                try { File.Delete(tempFilePath); } catch { }
-
+            tempFile.Delete();
             throw;
         }
     }
 
     public static void RunEncode(
-        (string From, string To) userExtensions, FileInfo input, FileInfo output, ushort version, ushort mode)
+        (string From, string To) userExtensions, FileInfo input, FileInfo? output,
+        ushort version, ushort mode, bool overwrite)
     {
         SafeOverwrite((e, i, o) => RunEncodeInternal(e, i, o, version, mode),
-            userExtensions, input, output);
+            userExtensions, input, output, overwrite);
     }
 
     public static void RunDecode(
-        (string From, string To) userExtensions, FileInfo input, FileInfo output)
+        (string From, string To) userExtensions, FileInfo input, FileInfo? output,
+        bool overwrite)
     {
         SafeOverwrite(RunDecodeInternal,
-            userExtensions, input, output);
+            userExtensions, input, output, overwrite);
     }
 
     public static void RunEncodeInternal(
@@ -129,9 +132,11 @@ public static class CommandHandler
         }
     }
 
-    private static (MediaFormat From, MediaFormat To) ParseMediaFormats(
-        (string From, string To) userExtensions, FileInfo input, FileInfo output)
+    private static (MediaFormat From, MediaFormat To) InferFileArguments(
+        (string From, string To) userExtensions, FileInfo input, [NotNull] ref FileInfo? output)
     {
+        output ??= new FileInfo(Path.ChangeExtension(input.FullName, userExtensions.To));
+
         var inputExtension = input.Extension;
         var outputExtension = output.Extension;
 

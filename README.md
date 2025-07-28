@@ -50,18 +50,20 @@ RDC is available both as a CLI tool and as a .NET library for programmatic use.
 ### Command-Line Interface
 
 ```bash
-rdc encode -f bmp:rdi input.bmp output.rdi
-rdc decode -f rdi:bmp input.rdi output.bmp
+rdc encode input.bmp output.rdi
+rdc decode input.rdi output.bmp
+
+rdc encode -w -f bmp:rdi input output
+rdc decode -w -f :bmp input.rdi output
 ```
 
 Options:
 
-* `--format, -f`: Specifies the conversion formats as `FROM:TO`
-* `--spec, -s`: Selects codec version
-* `--mode, -m`: Sets encoding mode
-* `--help, -h`: Displays available commands and options
-
-The CLI typically infers formats based on file extensions.
+* `-f`, `--format`: Input and output media formats as FROM:TO
+* `-s`, `--spec`: Set codec version
+* `-m`, `--mode`: Set encoding mode
+* `-w`, `--overwrite`: Allow overwriting the output file if it exists
+* `-h`, `--help`: Show help and usage information
 
 ### .NET Library
 

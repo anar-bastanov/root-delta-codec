@@ -26,7 +26,8 @@ public readonly struct RdcRootCommand(CommandLineConfiguration Command)
 
         var formatsOption = new Option<(string, string)>("--format");
         formatsOption.Aliases.Add("-f");
-        formatsOption.Description = "Media formats as FROM:TO";
+        formatsOption.Description = "Input and output media formats as FROM:TO";
+        formatsOption.Arity = ArgumentArity.ExactlyOne;
         formatsOption.CustomParser = result =>
         {
             string value = result.Tokens.Single().Value;
@@ -37,14 +38,15 @@ public readonly struct RdcRootCommand(CommandLineConfiguration Command)
 
         var specOption = new Option<ushort>("--spec");
         specOption.Aliases.Add("-s");
-        specOption.Description = "Codec version";
+        specOption.Description = "Set codec version";
+        specOption.Arity = ArgumentArity.ExactlyOne;
         specOption.CustomParser = result =>
         {
             string value = result.Tokens.Single().Value;
             var version = value.Split('.', 2);
             bool hasMinor = version.Length is 2 && !string.IsNullOrWhiteSpace(version[1]);
 
-            if (!byte.TryParse(version[0], out byte major))                  major = byte.MaxValue;
+            if (!byte.TryParse(version[0], out byte major)) major = byte.MaxValue;
             if (!byte.TryParse(hasMinor ? version[1] : "0", out byte minor)) minor = byte.MaxValue;
 
             return (ushort)((major << 8) | (minor << 0));
@@ -52,7 +54,8 @@ public readonly struct RdcRootCommand(CommandLineConfiguration Command)
 
         var modeOption = new Option<ushort>("--mode");
         modeOption.Aliases.Add("-m");
-        modeOption.Description = "Encoding mode";
+        modeOption.Description = "Set encoding mode";
+        modeOption.Arity = ArgumentArity.ExactlyOne;
         modeOption.CustomParser = result =>
         {
             string value = result.Tokens.Single().Value;
@@ -60,21 +63,30 @@ public readonly struct RdcRootCommand(CommandLineConfiguration Command)
             return ushort.TryParse(value, out ushort mode) ? mode : ushort.MaxValue;
         };
 
+        var overwriteOption = new Option<bool>("--overwrite");
+        overwriteOption.Aliases.Add("-w");
+        overwriteOption.Description = "Allow overwriting the output file if it exists";
+        overwriteOption.Arity = ArgumentArity.Zero;
+
         var inputArg = new Argument<FileInfo>("input");
         inputArg.Description = "Input file";
+        inputArg.Arity = ArgumentArity.ExactlyOne;
         inputArg.AcceptExistingOnly();
 
-        var outputArg = new Argument<FileInfo>("output");
+        var outputArg = new Argument<FileInfo?>("output");
         outputArg.Description = "Output file";
+        outputArg.Arity = ArgumentArity.ZeroOrOne;
         outputArg.AcceptLegalFilePathsOnly();
 
         encodeCommand.Add(formatsOption);
         encodeCommand.Add(specOption);
         encodeCommand.Add(modeOption);
+        encodeCommand.Add(overwriteOption);
         encodeCommand.Add(inputArg);
         encodeCommand.Add(outputArg);
 
         decodeCommand.Add(formatsOption);
+        decodeCommand.Add(overwriteOption);
         decodeCommand.Add(inputArg);
         decodeCommand.Add(outputArg);
 
@@ -87,28 +99,28 @@ public readonly struct RdcRootCommand(CommandLineConfiguration Command)
         encodeCommand.SetAction(TryCatchBlock(root, parseResult =>
         {
             var formats = parseResult.GetValue(formatsOption);
+            var input = parseResult.GetValue(inputArg)!;
+            var output = parseResult.GetValue(outputArg);
             ushort version = parseResult.GetValue(specOption);
             ushort mode = parseResult.GetValue(modeOption);
-            var input = parseResult.GetValue(inputArg)!;
-            var output = parseResult.GetValue(outputArg)!;
+            bool overwrite = parseResult.GetValue(overwriteOption);
 
-            CommandHandler.RunEncode(formats, input, output, version, mode);
+            CommandHandler.RunEncode(formats, input, output, version, mode, overwrite);
         }));
 
         decodeCommand.SetAction(TryCatchBlock(root, parseResult =>
         {
             var formats = parseResult.GetValue(formatsOption);
             var input = parseResult.GetValue(inputArg)!;
-            var output = parseResult.GetValue(outputArg)!;
+            var output = parseResult.GetValue(outputArg);
+            bool overwrite = parseResult.GetValue(overwriteOption);
 
-            CommandHandler.RunDecode(formats, input, output);
+            CommandHandler.RunDecode(formats, input, output, overwrite);
         }));
 
-        var config = new CommandLineConfiguration(root)
-        {
-            EnablePosixBundling = false,
-            EnableDefaultExceptionHandler = true
-        };
+        var config = new CommandLineConfiguration(root);
+        config.EnablePosixBundling = false;
+        config.EnableDefaultExceptionHandler = true;
 
         return new(config);
     }
