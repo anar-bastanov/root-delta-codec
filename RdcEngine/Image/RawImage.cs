@@ -5,4 +5,5 @@ internal record struct RawImage(
     uint Height,
     uint Stride,
     uint Channels,
+    uint Size,
     byte[] Data);

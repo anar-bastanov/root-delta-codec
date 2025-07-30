@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using RdcEngine.Image.Formats;
 
 namespace RdcEngine.Image;
@@ -15,7 +16,7 @@ public static class ImageCodec
         RawImage bmpRawImage = BmpFormat.Load(bmpInput);
         RawImage rdiRawImage = RootDeltaImageTransform.Encode(bmpRawImage, version, mode);
 
-        rdiRawImage.Data = RawDataCompressor.Compress(rdiRawImage.Data);
+        (rdiRawImage.Data, rdiRawImage.Size) = RawDataCompressor.Compress(rdiRawImage.Data, (int)rdiRawImage.Size);
         RdiFormat.Save(rdiRawImage, rdiOutput, version, mode);
     }
 
@@ -26,7 +27,7 @@ public static class ImageCodec
         StreamValidator.EnsureNotSame(rdiInput, bmpOutput);
 
         RawImage rdiRawImage = RdiFormat.Load(rdiInput, out ushort version, out ushort mode);
-        rdiRawImage.Data = RawDataCompressor.Decompress(rdiRawImage.Data);
+        (rdiRawImage.Data, rdiRawImage.Size) = RawDataCompressor.Decompress(rdiRawImage.Data, (int)rdiRawImage.Size);
 
         RawImage bmpRawImage = RootDeltaImageTransform.Decode(rdiRawImage, version, mode);
         BmpFormat.Save(bmpRawImage, bmpOutput);

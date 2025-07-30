@@ -42,10 +42,11 @@ internal static class RdiFormat
         StreamValidator.EnsureRemaining(rdiInput, offset + 1u);
         rdiInput.Seek(offset, SeekOrigin.Current);
 
-        byte[] raw = GC.AllocateUninitializedArray<byte>(checked((int)(rdiInput.Length - rdiInput.Position)));
+        uint size = (uint)(rdiInput.Length - rdiInput.Position);
+        byte[] raw = GC.AllocateUninitializedArray<byte>(checked((int)size));
         rdiInput.ReadExactly(raw);
 
-        return new RawImage(width, height, checked(width * channels), channels, raw);
+        return new RawImage(width, height, checked(width * channels), channels, size, raw);
     }
 
     [SkipLocalsInit]
@@ -54,7 +55,7 @@ internal static class RdiFormat
         StreamValidator.EnsureWritable(rdiOutput);
         ArgumentNullException.ThrowIfNull(rawImage.Data);
 
-        var (width, height, strideInput, channels, data) = rawImage;
+        var (width, height, strideInput, channels, size, data) = rawImage;
 
         if (width is 0 || height is 0)
             throw new ArgumentException("Width and height of RDI must be non-zero", nameof(rawImage));
@@ -76,6 +77,6 @@ internal static class RdiFormat
         for (int i = 0; i < Offset; ++i)
             rdiOutput.WriteByte(0);
 
-        rdiOutput.Write(data);
+        rdiOutput.Write(data.AsSpan(0, (int)size));
     }
 }

@@ -1,28 +1,29 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.IO.Compression;
 
 namespace RdcEngine;
 
 internal static class RawDataCompressor
 {
-    public static byte[] Compress(byte[] input)
+    public static (byte[] Output, uint Size) Compress(byte[] input, int size)
     {
         using var output = new MemoryStream();
 
-        using (Stream compressor = new ZLibStream(output, CompressionLevel.SmallestSize, leaveOpen: true))
-            compressor.Write(input, 0, input.Length);
+        using (Stream compressor = new ZLibStream(output, CompressionLevel.Optimal, leaveOpen: true))
+            compressor.Write(input.AsSpan(0, size));
 
-        return output.ToArray();
+        return (output.GetBuffer(), (uint)output.Position);
     }
 
-    public static byte[] Decompress(byte[] input)
+    public static (byte[] Output, uint Size) Decompress(byte[] input, int size, int capacity = 0)
     {
-        using var inputStream = new MemoryStream(input);
-        using Stream decompressor = new ZLibStream(inputStream, CompressionMode.Decompress);
+        using var inputStream = new MemoryStream(input, 0, size);
+        using Stream decompressor = new ZLibStream(inputStream, CompressionMode.Decompress, leaveOpen: true);
 
-        using var output = new MemoryStream();
+        using var output = new MemoryStream(capacity);
         decompressor.CopyTo(output);
 
-        return output.ToArray();
+        return (output.GetBuffer(), (uint)output.Position);
     }
 }

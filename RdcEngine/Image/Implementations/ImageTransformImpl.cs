@@ -14,9 +14,9 @@ internal abstract partial class ImageTransformImpl
 
     public abstract RawImage Decode(RawImage rawImage);
 
-    public abstract int ComputeLength(uint width, uint height, uint channels);
+    public abstract int ComputeLength(uint width, uint height);
 
-    public static ImageTransformImpl Choose(ushort version, ushort mode, uint channels)
+    public static void Validate(ref ushort version, ref ushort mode, ref uint channels)
     {
         byte major = (byte)(version >> 8), minor = (byte)(version >> 0);
 
@@ -37,7 +37,10 @@ internal abstract partial class ImageTransformImpl
 
         if (mode is 0)
             mode = DefaultMode;
+    }
 
+    public static ImageTransformImpl Resolve(ushort version, ushort mode, uint channels)
+    {
         return (version, mode, channels) switch
         {
             (0x01_01, 0x0001, 3) => new ImageTransform__V01_01__M1__C3(),

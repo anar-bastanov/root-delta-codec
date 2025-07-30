@@ -1,5 +1,4 @@
 ﻿using System;
-using System.IO;
 
 namespace RdcEngine.Image.Implementations;
 
@@ -9,8 +8,8 @@ internal abstract partial class ImageTransformImpl
     {
         public override RawImage Encode(RawImage rawImage)
         {
-            var (width, height, stride, channels, data) = rawImage;
-            int length = ComputeLength(width, height, channels);
+            var (width, height, stride, _, _, data) = rawImage;
+            int length = ComputeLength(width, height);
 
             byte[] rdi = GC.AllocateUninitializedArray<byte>(length);
 
@@ -45,16 +44,12 @@ internal abstract partial class ImageTransformImpl
                 }
             }
 
-            return rawImage with { Data = rdi };
+            return rawImage with { Size = (uint)length, Data = rdi };
         }
 
         public override RawImage Decode(RawImage rawImage)
         {
-            var (width, height, stride, channels, data) = rawImage;
-            int length = ComputeLength(width, height, channels);
-
-            if (length != data.Length)
-                throw new InvalidDataException("RDI size mismatch or incomplete pixel data");
+            var (width, height, stride, _, _, data) = rawImage;
 
             byte[] raw = GC.AllocateUninitializedArray<byte>((int)(stride * height));
 
@@ -84,12 +79,12 @@ internal abstract partial class ImageTransformImpl
 
             }
 
-            return rawImage with { Data = raw };
+            return rawImage with { Size = (uint)raw.Length, Data = raw };
         }
 
-        public override int ComputeLength(uint width, uint height, uint channels)
+        public override int ComputeLength(uint width, uint height)
         {
-            return checked((int)(height * width * channels));
+            return checked((int)(height * width * 4));
         }
     }
 }

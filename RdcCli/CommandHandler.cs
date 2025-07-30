@@ -13,15 +13,15 @@ public static class CommandHandler
         (string From, string To) userExtensions, FileInfo input, FileInfo? output,
         bool overwrite)
     {
-        var tempFile = new FileInfo(Path.Combine(output?.DirectoryName ?? Path.GetTempPath(), Path.GetRandomFileName()));
+        var formats = InferFileArguments(userExtensions, input, ref output);
+
+        if (!overwrite && output.Exists)
+            throw new CommandLineException($"File '{output.Name}' already exists. Use --overwrite to allow replacing it");
+
+        var tempFile = new FileInfo(Path.Combine(output.DirectoryName ?? Path.GetTempPath(), Path.GetRandomFileName()));
 
         try
         {
-            var formats = InferFileArguments(userExtensions, input, ref output);
-
-            if (!overwrite && output.Exists)
-                throw new CommandLineException($"File '{output.Name}' already exists. Use --overwrite to allow replacing it");
-
             using (var tempStream = tempFile.Create())
                 using (var inputStream = input.OpenRead())
                     handler(formats, inputStream, tempStream);
