@@ -10,17 +10,17 @@ internal abstract partial class ImageTransformImpl
 
     public abstract RawImage Decode(RawImage rawImage);
 
-    public abstract int ComputeLength(uint width, uint height);
+    public abstract int ComputeLength(int width, int height);
 
-    public static ImageTransformImpl Resolve(ushort mode, uint channels)
+    public static ImageTransformImpl Resolve(ushort mode, int colorSpace)
     {
         if (mode is ushort.MaxValue)
             throw new ArgumentException("Invalid RDI encoding mode", nameof(mode));
 
-        if (channels is not (3 or 4))
-            throw new ArgumentException("Invalid number of channels for RDI", nameof(channels));
+        if (colorSpace is not (3 or 4))
+            throw new ArgumentException("Invalid number of colorSpace for RDI", nameof(colorSpace));
 
-        var argb = channels is 4;
+        var argb = colorSpace is 4;
 
         ImageTransformImpl impl = (mode, argb) switch
         {

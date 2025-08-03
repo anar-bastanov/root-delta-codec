@@ -60,7 +60,6 @@ rdc decode -w -f :bmp input.rdi output
 Options:
 
 * `-f`, `--format`: Input and output media formats as FROM:TO
-* `-s`, `--spec`: Set codec version
 * `-m`, `--mode`: Set encoding mode
 * `-w`, `--overwrite`: Allow overwriting the output file if it exists
 * `-h`, `--help`: Show help and usage information

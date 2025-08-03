@@ -47,32 +47,45 @@ internal static class BmpFormat
         if (offBits < HeaderSize || offBits > fileSize || offBits < dibSize + InfoHeaderSize)
             throw new InvalidDataException("Invalid pixel data offset in BMP header");
 
+        if (width is <= 0 || height is 0)
+            throw new InvalidDataException("Invalid BMP dimensions");
+
         if (planes is not 1)
             throw new NotSupportedException("Unsupported number of planes for BMP");
 
-        if (bpp is not 24 and not 32)
+        if (bpp is not (24 or 32))
             throw new NotSupportedException("Only BGR and BGRA color spaces are supported for BMP");
 
         if (compress is not 0)
             throw new NotSupportedException("Compressed BMP is not supported");
 
-        if (width is <= 0 || height is 0)
-            throw new InvalidDataException("Invalid BMP dimensions");
+        const int hardLimit = 1 << 17;
+        const long maxSize = (1L << 31) - 1;
+        long size = bmpInput.Length - offBits;
+        int rows = height < 0 ? -height : height;
+
+        if (width is > hardLimit)
+            throw new InvalidDataException($"Width of BMP must not exceed {hardLimit}");
+
+        if (rows is > hardLimit)
+            throw new InvalidDataException($"Height of BMP must not exceed {hardLimit}");
+
+        if (size > maxSize)
+            throw new InvalidDataException("BMP image too big to load");
 
         uint bytesPerPixel = bpp / 8u;
-        uint stride = ((uint)width * bytesPerPixel + Alignment - 1) & ~(uint)(Alignment - 1);
-        uint rows = (uint)(height < 0 ? -height : height);
-        uint pixelBytes = checked(stride * rows);
+        long stride = (width * bytesPerPixel + Alignment - 1) & ~(Alignment - 1);
+        long pixelBytes = stride * rows;
+        long expectedEnd = offBits + pixelBytes;
 
         if (imageSize != 0 && imageSize != pixelBytes)
             throw new InvalidDataException("BMP header contains incorrect image size");
 
-        ulong expectedEnd = offBits + pixelBytes;
-        if (expectedEnd != (ulong)bmpInput.Length)
+        if (expectedEnd != bmpInput.Length)
             throw new InvalidDataException("BMP size mismatch or incomplete pixel data");
 
-        StreamValidator.EnsureRemaining(bmpInput, expectedEnd - HeaderSize);
-        bmpInput.Seek(offBits - HeaderSize, SeekOrigin.Current);
+        StreamValidator.EnsureRemaining(bmpInput, (ulong)expectedEnd - HeaderSize);
+        bmpInput.Seek(offBits, SeekOrigin.Begin);
 
         byte[] raw = GC.AllocateUninitializedArray<byte>((int)pixelBytes);
 
@@ -82,13 +95,13 @@ internal static class BmpFormat
         }
         else
         {
-            for (uint i = pixelBytes - stride; (int)i >= 0; i -= stride)
+            for (int i = (int)(pixelBytes - stride); i >= 0; i -= (int)stride)
             {
-                bmpInput.ReadExactly(raw.AsSpan((int)i, (int)stride));
+                bmpInput.ReadExactly(raw.AsSpan(i, (int)stride));
             }
         }
 
-        return new((uint)width, rows, stride, bytesPerPixel, pixelBytes, raw);
+        return new(width, rows, (int)stride, (int)bytesPerPixel, (int)pixelBytes, raw);
     }
 
     [SkipLocalsInit]
@@ -97,18 +110,26 @@ internal static class BmpFormat
         StreamValidator.EnsureWritable(bmpOutput);
         ArgumentNullException.ThrowIfNull(rawImage.Data);
 
-        var (width, height, strideInput, channels, size, data) = rawImage;
+        var (width, height, strideInput, colorSpace, size, data) = rawImage;
 
-        if (width is 0 || height is 0)
-            throw new ArgumentException("Width and height of BMP must be non-zero", nameof(rawImage));
+        if (width is <= 0 || height is <= 0)
+            throw new ArgumentException("Width and height of BMP must be positive", nameof(rawImage));
 
-        if (channels is not 3 and not 4)
+        const int hardLimit = 1 << 17;
+
+        if (width is > hardLimit)
+            throw new ArgumentException($"Width of BMP must not exceed {hardLimit}", nameof(rawImage));
+
+        if (height is > hardLimit)
+            throw new ArgumentException($"Height of BMP must not exceed {hardLimit}", nameof(rawImage));
+
+        if (colorSpace is not (3 or 4))
             throw new ArgumentException("Only BGR and BGRA color spaces are supported for BMP", nameof(rawImage));
 
-        if (strideInput < width * channels)
+        if (strideInput < width * colorSpace)
             throw new ArgumentException("Stride of BMP is too small for its width", nameof(rawImage));
 
-        uint stride = (width * channels + Alignment - 1) & ~(uint)(Alignment - 1);
+        int stride = (width * colorSpace + Alignment - 1) & ~(Alignment - 1);
 
         if (data.Length < size)
             throw new ArgumentException("BMP size mismatch or incomplete pixel data", nameof(rawImage));
@@ -116,18 +137,18 @@ internal static class BmpFormat
         Span<byte> header = stackalloc byte[HeaderSize];
 
         BinaryPrimitives.WriteUInt16LittleEndian(header[00..02], Signature);
-        BinaryPrimitives.WriteUInt32LittleEndian(header[02..06], HeaderSize + size);
+        BinaryPrimitives.WriteUInt32LittleEndian(header[02..06], HeaderSize + (uint)size);
         BinaryPrimitives.WriteUInt16LittleEndian(header[06..08], 0);
         BinaryPrimitives.WriteUInt16LittleEndian(header[08..10], 0);
         BinaryPrimitives.WriteUInt32LittleEndian(header[10..14], HeaderSize);
 
         BinaryPrimitives.WriteUInt32LittleEndian(header[14..18], DibHeaderSize);
-        BinaryPrimitives.WriteUInt32LittleEndian(header[18..22], width);
-        BinaryPrimitives.WriteInt32LittleEndian(header[22..26], -checked((int)height));
+        BinaryPrimitives.WriteInt32LittleEndian (header[18..22], width);
+        BinaryPrimitives.WriteInt32LittleEndian (header[22..26], -height);
         BinaryPrimitives.WriteUInt16LittleEndian(header[26..28], 1);
-        BinaryPrimitives.WriteUInt16LittleEndian(header[28..30], (ushort)(channels * 8));
+        BinaryPrimitives.WriteUInt16LittleEndian(header[28..30], (ushort)(colorSpace * 8));
         BinaryPrimitives.WriteUInt32LittleEndian(header[30..34], 0);
-        BinaryPrimitives.WriteUInt32LittleEndian(header[34..38], size);
+        BinaryPrimitives.WriteUInt32LittleEndian(header[34..38], (uint)size);
         BinaryPrimitives.WriteInt32LittleEndian(header[38..42], 0);
         BinaryPrimitives.WriteInt32LittleEndian(header[42..46], 0);
         BinaryPrimitives.WriteUInt32LittleEndian(header[46..50], 0);
@@ -135,9 +156,9 @@ internal static class BmpFormat
 
         bmpOutput.Write(header);
 
-        for (uint i = 0, row = width * channels, pad = stride - row; i < size; i += stride)
+        for (int i = 0, row = width * colorSpace, pad = stride - row; i < size; i += stride)
         {
-            bmpOutput.Write(data, (int)i, (int)row);
+            bmpOutput.Write(data, i, row);
 
             for (uint j = 0; j < pad; ++j)
                 bmpOutput.WriteByte(0);

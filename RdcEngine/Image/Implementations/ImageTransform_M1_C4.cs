@@ -15,8 +15,8 @@ internal abstract partial class ImageTransformImpl
 
             for (int y = 0; y < height; ++y)
             {
-                int dataOff = y * (int)stride;
-                int rdiOff = y * (int)width * 4;
+                int dataOff = y * stride;
+                int rdiOff = y * width * 4;
 
                 byte r = data[dataOff + 0], g = data[dataOff + 1], b = data[dataOff + 2], a = data[dataOff + 3];
                 byte rd = r, gd = g, bd = b, ad = a;
@@ -44,19 +44,19 @@ internal abstract partial class ImageTransformImpl
                 }
             }
 
-            return rawImage with { Size = (uint)length, Data = rdi };
+            return rawImage with { Size = length, Data = rdi };
         }
 
         public override RawImage Decode(RawImage rawImage)
         {
             var (width, height, stride, _, _, data) = rawImage;
 
-            byte[] raw = GC.AllocateUninitializedArray<byte>((int)(stride * height));
+            byte[] raw = GC.AllocateUninitializedArray<byte>(stride * height);
 
             for (int y = 0; y < height; ++y)
             {
-                int dataOff = y * (int)width * 4;
-                int rawOff = y * (int)stride;
+                int dataOff = y * width * 4;
+                int rawOff = y * stride;
 
                 byte r = data[dataOff + 0], g = data[dataOff + 1], b = data[dataOff + 2], a = data[dataOff + 3];
                 uint iter = 0;
@@ -76,15 +76,14 @@ internal abstract partial class ImageTransformImpl
                     b += Utils.FromRootDelta(data[dataOff + iter * 4 + 2]);
                     a += Utils.FromRootDelta(data[dataOff + iter * 4 + 2]);
                 }
-
             }
 
-            return rawImage with { Size = (uint)raw.Length, Data = raw };
+            return rawImage with { Size = raw.Length, Data = raw };
         }
 
-        public override int ComputeLength(uint width, uint height)
+        public override int ComputeLength(int width, int height)
         {
-            return checked((int)(height * width * 4));
+            return height * width * 4;
         }
     }
 }

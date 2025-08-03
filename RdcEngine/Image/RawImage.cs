@@ -1,9 +1,9 @@
 ﻿namespace RdcEngine.Image;
 
 internal record struct RawImage(
-    uint Width,
-    uint Height,
-    uint Stride,
-    uint Channels,
-    uint Size,
+    int Width,
+    int Height,
+    int Stride,
+    int ColorSpace,
+    int Size,
     byte[] Data);
