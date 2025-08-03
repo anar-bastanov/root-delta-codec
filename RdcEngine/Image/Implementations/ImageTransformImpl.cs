@@ -4,11 +4,7 @@ namespace RdcEngine.Image.Implementations;
 
 internal abstract partial class ImageTransformImpl
 {
-    private const ushort DefaultMajorVersion = 0x01;
-
-    private const ushort DefaultMinorVersion = 0x01;
-
-    private const ushort DefaultMode = 0x0001;
+    public const ushort DefaultMode = 0x0001;
 
     public abstract RawImage Encode(RawImage rawImage);
 
@@ -16,36 +12,38 @@ internal abstract partial class ImageTransformImpl
 
     public abstract int ComputeLength(uint width, uint height);
 
-    public static void Validate(ref ushort version, ref ushort mode, ref uint channels)
+    public static ImageTransformImpl Resolve(ushort mode, uint channels)
     {
-        byte major = (byte)(version >> 8), minor = (byte)(version >> 0);
-
-        if (major is byte.MaxValue || minor is byte.MaxValue)
-            throw new ArgumentException("Invalid RDC version number", nameof(version));
-
         if (mode is ushort.MaxValue)
-            throw new ArgumentException("Invalid RDC encoding mode", nameof(mode));
+            throw new ArgumentException("Invalid RDI encoding mode", nameof(mode));
 
-        if (channels is not 3 and not 4)
-            throw new ArgumentException("Invalid number of channels in RDI", nameof(channels));
+        if (channels is not (3 or 4))
+            throw new ArgumentException("Invalid number of channels for RDI", nameof(channels));
 
-        if (major is 0)
-            version |= DefaultMajorVersion << 8;
+        var argb = channels is 4;
 
-        if (minor is 0)
-            version |= DefaultMinorVersion << 0;
-
-        if (mode is 0)
-            mode = DefaultMode;
-    }
-
-    public static ImageTransformImpl Resolve(ushort version, ushort mode, uint channels)
-    {
-        return (version, mode, channels) switch
+        ImageTransformImpl impl = (mode, argb) switch
         {
-            (0x01_01, 0x0001, 3) => new ImageTransform__V01_01__M1__C3(),
-            (0x01_01, 0x0001, 4) => new ImageTransform__V01_01__M1__C4(),
-            _ => throw new NotSupportedException("Unrecognized image encoding mode for the given codec version")
+            (0, _)     => Deprecated(),
+
+            (1, false) => new ImageTransform_M1_C3(),
+            (1, true)  => new ImageTransform_M1_C4(),
+
+            (2, false) => RgbNotSupported(),
+            (2, true)  => RgbaNotSupported(),
+
+            _ => throw new NotSupportedException("Unrecognized RDI encoding mode")
         };
+
+        return impl;
+
+        static ImageTransformImpl Deprecated() =>
+            throw new NotSupportedException("Deprecated RDI encoding mode");
+
+        static ImageTransformImpl RgbNotSupported() =>
+            throw new NotSupportedException("RGB color space is not supported for given RDI encoding mode");
+
+        static ImageTransformImpl RgbaNotSupported() =>
+            throw new NotSupportedException("RGBA color space is not supported for given RDI encoding mode");
     }
 }

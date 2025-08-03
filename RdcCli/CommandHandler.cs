@@ -37,9 +37,9 @@ public static class CommandHandler
 
     public static void RunEncode(
         (string From, string To) userExtensions, FileInfo input, FileInfo? output,
-        ushort version, ushort mode, bool overwrite)
+        ushort mode, bool overwrite)
     {
-        SafeOverwrite((e, i, o) => RunEncodeInternal(e, i, o, version, mode),
+        SafeOverwrite((e, i, o) => RunEncodeInternal(e, i, o, mode),
             userExtensions, input, output, overwrite);
     }
 
@@ -53,12 +53,12 @@ public static class CommandHandler
 
     public static void RunEncodeInternal(
         (MediaFormat From, MediaFormat To) mediaFormats, FileStream inputStream, FileStream outputStream,
-        ushort version, ushort mode)
+        ushort mode)
     {
         switch (mediaFormats)
         {
             case (BmpImage, RdiImage):
-                ImageCodec.EncodeBmp(inputStream, outputStream, version, mode);
+                ImageCodec.EncodeBmp(inputStream, outputStream, mode);
                 break;
             case (PngImage, RdiImage):
             case (JpegImage, RdiImage):

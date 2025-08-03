@@ -51,10 +51,10 @@ internal static class BmpFormat
             throw new NotSupportedException("Unsupported number of planes for BMP");
 
         if (bpp is not 24 and not 32)
-            throw new NotSupportedException("Only 24-bit and 32-bit BMPs are supported");
+            throw new NotSupportedException("Only BGR and BGRA color spaces are supported for BMP");
 
         if (compress is not 0)
-            throw new NotSupportedException("Compressed BMPs are not supported");
+            throw new NotSupportedException("Compressed BMP is not supported");
 
         if (width is <= 0 || height is 0)
             throw new InvalidDataException("Invalid BMP dimensions");
@@ -103,7 +103,7 @@ internal static class BmpFormat
             throw new ArgumentException("Width and height of BMP must be non-zero", nameof(rawImage));
 
         if (channels is not 3 and not 4)
-            throw new ArgumentException("Only 24-bit and 32-bit BMP is supported", nameof(rawImage));
+            throw new ArgumentException("Only BGR and BGRA color spaces are supported for BMP", nameof(rawImage));
 
         if (strideInput < width * channels)
             throw new ArgumentException("Stride of BMP is too small for its width", nameof(rawImage));

@@ -4,7 +4,7 @@ namespace RdcEngine.Image.Implementations;
 
 internal abstract partial class ImageTransformImpl
 {
-    private sealed class ImageTransform__V01_01__M1__C3 : ImageTransformImpl
+    private sealed class ImageTransform_M1_C3 : ImageTransformImpl
     {
         public override RawImage Encode(RawImage rawImage)
         {
