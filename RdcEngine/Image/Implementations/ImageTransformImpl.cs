@@ -32,6 +32,9 @@ internal abstract partial class ImageTransformImpl
             (2, false) => RgbNotSupported(),
             (2, true)  => RgbaNotSupported(),
 
+            (3, false) => new ImageTransform_M3_C3(),
+            (3, true)  => new ImageTransform_M3_C4(),
+
             _ => throw new NotSupportedException("Unrecognized RDI encoding mode")
         };
 

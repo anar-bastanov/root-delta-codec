@@ -20,20 +20,20 @@ internal abstract partial class ImageTransformImpl
 
                 byte r = data[dataOff + 0], g = data[dataOff + 1], b = data[dataOff + 2];
                 byte rd = r, gd = g, bd = b;
-                uint iter = 0;
+                int x = 0;
 
                 while (true)
                 {
-                    rdi[rdiOff + iter * 3 + 0] = rd;
-                    rdi[rdiOff + iter * 3 + 1] = gd;
-                    rdi[rdiOff + iter * 3 + 2] = bd;
+                    rdi[rdiOff + x * 3 + 0] = rd;
+                    rdi[rdiOff + x * 3 + 1] = gd;
+                    rdi[rdiOff + x * 3 + 2] = bd;
 
-                    if (++iter >= width)
+                    if (++x >= width)
                         break;
 
-                    rd = Utils.ToRootDelta(r, data[dataOff + iter * 3 + 0]);
-                    gd = Utils.ToRootDelta(g, data[dataOff + iter * 3 + 1]);
-                    bd = Utils.ToRootDelta(b, data[dataOff + iter * 3 + 2]);
+                    rd = Utils.ToRootDelta(r, data[dataOff + x * 3 + 0]);
+                    gd = Utils.ToRootDelta(g, data[dataOff + x * 3 + 1]);
+                    bd = Utils.ToRootDelta(b, data[dataOff + x * 3 + 2]);
 
                     r += Utils.FromRootDelta(rd);
                     g += Utils.FromRootDelta(gd);
@@ -56,20 +56,20 @@ internal abstract partial class ImageTransformImpl
                 int rawOff = y * stride;
 
                 byte r = data[dataOff + 0], g = data[dataOff + 1], b = data[dataOff + 2];
-                uint iter = 0;
+                int x = 0;
 
                 while (true)
                 {
-                    raw[rawOff + iter * 3 + 0] = r;
-                    raw[rawOff + iter * 3 + 1] = g;
-                    raw[rawOff + iter * 3 + 2] = b;
+                    raw[rawOff + x * 3 + 0] = r;
+                    raw[rawOff + x * 3 + 1] = g;
+                    raw[rawOff + x * 3 + 2] = b;
 
-                    if (++iter >= width)
+                    if (++x >= width)
                         break;
 
-                    r += Utils.FromRootDelta(data[dataOff + iter * 3 + 0]);
-                    g += Utils.FromRootDelta(data[dataOff + iter * 3 + 1]);
-                    b += Utils.FromRootDelta(data[dataOff + iter * 3 + 2]);
+                    r += Utils.FromRootDelta(data[dataOff + x * 3 + 0]);
+                    g += Utils.FromRootDelta(data[dataOff + x * 3 + 1]);
+                    b += Utils.FromRootDelta(data[dataOff + x * 3 + 2]);
                 }
             }
 
@@ -82,3 +82,4 @@ internal abstract partial class ImageTransformImpl
         }
     }
 }
+ 
