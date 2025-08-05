@@ -39,25 +39,25 @@ internal static class BmpFormat
         uint imageSize = BinaryPrimitives.ReadUInt32LittleEndian(hdr[34..38]);
 
         if (signature is not Signature)
-            throw new InvalidDataException("Missing BMP signature");
+            throw new CodecException("Missing BMP signature");
 
         if (dibSize is < DibHeaderSize)
-            throw new NotSupportedException("Unsupported DIB header size for BMP");
+            throw new CodecException("Unsupported DIB header size for BMP");
 
         if (offBits < HeaderSize || offBits > fileSize || offBits < dibSize + InfoHeaderSize)
-            throw new InvalidDataException("Invalid pixel data offset in BMP header");
+            throw new CodecException("Invalid pixel data offset in BMP header");
 
         if (width is <= 0 || height is 0)
-            throw new InvalidDataException("Invalid BMP dimensions");
+            throw new CodecException("Invalid BMP dimensions");
 
         if (planes is not 1)
-            throw new NotSupportedException("Unsupported number of planes for BMP");
+            throw new CodecException("Unsupported number of planes for BMP");
 
         if (bpp is not (24 or 32))
-            throw new NotSupportedException("Only BGR and BGRA color spaces are supported for BMP");
+            throw new CodecException("Only BGR and BGRA color spaces are supported for BMP");
 
         if (compress is not 0)
-            throw new NotSupportedException("Compressed BMP is not supported");
+            throw new CodecException("Compressed BMP is not supported");
 
         const int hardLimit = 1 << 17;
         const long maxSize = (1L << 31) - 1;
@@ -65,13 +65,13 @@ internal static class BmpFormat
         int rows = height < 0 ? -height : height;
 
         if (width is > hardLimit)
-            throw new InvalidDataException($"Width of BMP must not exceed {hardLimit}");
+            throw new CodecException($"Width of BMP must not exceed {hardLimit}");
 
         if (rows is > hardLimit)
-            throw new InvalidDataException($"Height of BMP must not exceed {hardLimit}");
+            throw new CodecException($"Height of BMP must not exceed {hardLimit}");
 
         if (size > maxSize)
-            throw new InvalidDataException("BMP image too big to load");
+            throw new CodecException("BMP image too big to load");
 
         uint bytesPerPixel = bpp / 8u;
         long stride = (width * bytesPerPixel + Alignment - 1) & ~(Alignment - 1);
@@ -79,10 +79,10 @@ internal static class BmpFormat
         long expectedEnd = offBits + pixelBytes;
 
         if (imageSize != 0 && imageSize != pixelBytes)
-            throw new InvalidDataException("BMP header contains incorrect image size");
+            throw new CodecException("BMP header contains incorrect image size");
 
         if (expectedEnd != bmpInput.Length)
-            throw new InvalidDataException("BMP size mismatch or incomplete pixel data");
+            throw new CodecException("BMP size mismatch or incomplete pixel data");
 
         StreamValidator.EnsureRemaining(bmpInput, (ulong)expectedEnd - HeaderSize);
         bmpInput.Seek(offBits, SeekOrigin.Begin);
@@ -113,26 +113,26 @@ internal static class BmpFormat
         var (width, height, strideInput, colorSpace, size, data) = rawImage;
 
         if (width is <= 0 || height is <= 0)
-            throw new ArgumentException("Width and height of BMP must be positive", nameof(rawImage));
+            throw new CodecException("Width and height of BMP must be positive");
 
         const int hardLimit = 1 << 17;
 
         if (width is > hardLimit)
-            throw new ArgumentException($"Width of BMP must not exceed {hardLimit}", nameof(rawImage));
+            throw new CodecException($"Width of BMP must not exceed {hardLimit}");
 
         if (height is > hardLimit)
-            throw new ArgumentException($"Height of BMP must not exceed {hardLimit}", nameof(rawImage));
+            throw new CodecException($"Height of BMP must not exceed {hardLimit}");
 
         if (colorSpace is not (3 or 4))
-            throw new ArgumentException("Only BGR and BGRA color spaces are supported for BMP", nameof(rawImage));
+            throw new CodecException("Only BGR and BGRA color spaces are supported for BMP");
 
         if (strideInput < width * colorSpace)
-            throw new ArgumentException("Stride of BMP is too small for its width", nameof(rawImage));
+            throw new CodecException("Stride of BMP is too small for its width");
 
         int stride = (width * colorSpace + Alignment - 1) & ~(Alignment - 1);
 
         if (data.Length < size)
-            throw new ArgumentException("BMP size mismatch or incomplete pixel data", nameof(rawImage));
+            throw new CodecException("BMP size mismatch or incomplete pixel data");
 
         Span<byte> header = stackalloc byte[HeaderSize];
 
@@ -162,21 +162,6 @@ internal static class BmpFormat
 
             for (uint j = 0; j < pad; ++j)
                 bmpOutput.WriteByte(0);
-        }
-    }
-
-    [Obsolete]
-    private static void FlipVertically(byte[] data, int stride, int rows)
-    {
-        for (int top = 0, bot = rows * stride; top < bot;)
-        {
-            bot -= stride;
-            Span<byte> a = data.AsSpan(top, stride);
-            Span<byte> b = data.AsSpan(bot, stride);
-            top += stride;
-
-            for (int i = 0; i < stride; ++i)
-                (a[i], b[i]) = (b[i], a[i]);
         }
     }
 }

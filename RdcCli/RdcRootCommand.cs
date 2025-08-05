@@ -1,4 +1,5 @@
-﻿using System;
+﻿using RdcEngine;
+using System;
 using System.CommandLine;
 using System.IO;
 using System.Linq;
@@ -109,6 +110,10 @@ public readonly struct RdcRootCommand(CommandLineConfiguration Command)
 
     private static Action<ParseResult> TryCatchBlock(RootCommand root, Action<ParseResult> handler)
     {
+        const int cliError = 1;
+        const int codecError = 2;
+        const int internalError = 3;
+
         return result =>
         {
             try
@@ -126,19 +131,24 @@ public readonly struct RdcRootCommand(CommandLineConfiguration Command)
                     Console.ForegroundColor = color;
 
                     root.Parse("-h").Invoke();
+                    Environment.Exit(cliError);
                 }
-                else
-                {
+
+                bool isCodecError = ex is CodecException;
+
+                if (isCodecError)
                     Console.Error.Write($"Codec error: {ex.Message}.");
-                    Console.ForegroundColor = color;
+                else
+                    Console.Error.Write($"Internal error: {ex.Message}.");
+
+                Console.ForegroundColor = color;
 
 #if DEBUG
-                    Console.Error.WriteLine();
-                    Console.Error.WriteLine(ex);
+                Console.Error.WriteLine();
+                Console.Error.WriteLine(ex);
 #endif
-                }
 
-                Environment.Exit(1);
+                Environment.Exit(isCodecError ? codecError : internalError);
             }
         };
     }

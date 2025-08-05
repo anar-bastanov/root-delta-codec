@@ -1,6 +1,5 @@
 ﻿using RdcEngine.Image.Implementations;
 using System.Collections.Generic;
-using System.IO;
 using System.Runtime.InteropServices;
 
 namespace RdcEngine.Image;
@@ -23,7 +22,7 @@ internal static class RootDeltaImageTransform
         var impl = GetImplementation(mode, colorSpace);
 
         if (impl.ComputeLength(width, height) > size)
-            throw new InvalidDataException("RDI size mismatch or incomplete pixel data");
+            throw new CodecException("RDI size mismatch or incomplete pixel data");
 
         return impl.Decode(rawImage);
     }

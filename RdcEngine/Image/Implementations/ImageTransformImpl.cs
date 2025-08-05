@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace RdcEngine.Image.Implementations;
+﻿namespace RdcEngine.Image.Implementations;
 
 internal abstract partial class ImageTransformImpl
 {
@@ -15,10 +13,10 @@ internal abstract partial class ImageTransformImpl
     public static ImageTransformImpl Resolve(ushort mode, int colorSpace)
     {
         if (mode is ushort.MaxValue)
-            throw new ArgumentException("Invalid RDI encoding mode", nameof(mode));
+            throw new CodecException("Invalid RDI encoding mode");
 
         if (colorSpace is not (3 or 4))
-            throw new ArgumentException("Invalid number of colorSpace for RDI", nameof(colorSpace));
+            throw new CodecException("Invalid color space for RDI");
 
         var argb = colorSpace is 4;
 
@@ -35,18 +33,18 @@ internal abstract partial class ImageTransformImpl
             (3, false) => new ImageTransform_M3_C3(),
             (3, true)  => new ImageTransform_M3_C4(),
 
-            _ => throw new NotSupportedException("Unrecognized RDI encoding mode")
+            _ => throw new CodecException("Unrecognized RDI encoding mode")
         };
 
         return impl;
 
         static ImageTransformImpl Deprecated() =>
-            throw new NotSupportedException("Deprecated RDI encoding mode");
+            throw new CodecException("Deprecated RDI encoding mode");
 
         static ImageTransformImpl RgbNotSupported() =>
-            throw new NotSupportedException("RGB color space is not supported for given RDI encoding mode");
+            throw new CodecException("RGB color space is not supported for given RDI encoding mode");
 
         static ImageTransformImpl RgbaNotSupported() =>
-            throw new NotSupportedException("RGBA color space is not supported for given RDI encoding mode");
+            throw new CodecException("RGBA color space is not supported for given RDI encoding mode");
     }
 }
