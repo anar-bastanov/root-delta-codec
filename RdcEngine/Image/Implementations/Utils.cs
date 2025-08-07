@@ -48,7 +48,7 @@ internal abstract partial class ImageTransformImpl
 
         public static byte FromRootDelta(byte delta)
         {
-            return (delta & 0xF) switch
+            return (delta & 0x0F) switch
             {
                 0b0000 => 0,
                 0b0001 => 1,
@@ -68,6 +68,29 @@ internal abstract partial class ImageTransformImpl
                 0b1111 => 255,
                 _ => throw new UnreachableException()
             };
+        }
+
+        public static (byte Y, byte Co, byte Cg) RgbToYCoCg(byte r, byte g, byte b)
+        {
+            int y = (2 * g + r + b + 1) >> 2;
+            int co = ((r - b) >> 1) + 128;
+            int cg = ((2 * g - r - b + 1) >> 2) + 128;
+
+            return (ClampToByte(y), ClampToByte(co), ClampToByte(cg));
+        }
+
+        public static (byte R, byte G, byte B) YCoCgToRgba(byte y, byte co, byte cg)
+        {
+            int r = y + co - cg;
+            int g = y + cg - 128;
+            int b = y - co - cg + 256;
+
+            return (ClampToByte(r), ClampToByte(g), ClampToByte(b));
+        }
+
+        private static byte ClampToByte(int value)
+        {
+            return (byte)(value < 0 ? 0 : value > 255 ? 255 : value);
         }
     }
 }

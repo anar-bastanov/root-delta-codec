@@ -2,7 +2,7 @@
 
 internal abstract partial class ImageTransformImpl
 {
-    public const ushort DefaultMode = 0x0001;
+    public const ushort DefaultMode = 0x0003;
 
     public abstract RawImage Encode(RawImage rawImage);
 
@@ -32,6 +32,9 @@ internal abstract partial class ImageTransformImpl
 
             (3, false) => new ImageTransform_M3_C3(),
             (3, true)  => new ImageTransform_M3_C4(),
+
+            (4, false) => new ImageTransform_M4_C3(),
+            (4, true)  => new ImageTransform_M4_C4(),
 
             _ => throw new CodecException("Unrecognized RDI encoding mode")
         };

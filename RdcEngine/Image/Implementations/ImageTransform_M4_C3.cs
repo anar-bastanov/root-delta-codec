@@ -4,7 +4,7 @@ namespace RdcEngine.Image.Implementations;
 
 internal abstract partial class ImageTransformImpl
 {
-    private sealed class ImageTransform_M1_C3 : ImageTransformImpl
+    private sealed class ImageTransform_M4_C3 : ImageTransformImpl
     {
         public override RawImage Encode(RawImage rawImage)
         {
@@ -18,26 +18,28 @@ internal abstract partial class ImageTransformImpl
                 int dataOff = y * stride;
                 int rdiOff = y * width * 3;
 
-                byte r = data[dataOff + 2], g = data[dataOff + 1], b = data[dataOff + 0];
-                byte rd = r, gd = g, bd = b;
+                var (l, co, cg) = Utils.RgbToYCoCg(data[dataOff + 2], data[dataOff + 1], data[dataOff + 0]);
+                byte ld = l, cod = co, cgd = cg;
                 int x = 0;
 
                 while (true)
                 {
-                    rdi[rdiOff + x * 3 + 0] = rd;
-                    rdi[rdiOff + x * 3 + 1] = gd;
-                    rdi[rdiOff + x * 3 + 2] = bd;
+                    rdi[rdiOff + x * 3 + 0] = ld;
+                    rdi[rdiOff + x * 3 + 1] = cod;
+                    rdi[rdiOff + x * 3 + 2] = cgd;
 
                     if (++x >= width)
                         break;
 
-                    rd = Utils.ToRootDelta(r, data[dataOff + x * 3 + 2]);
-                    gd = Utils.ToRootDelta(g, data[dataOff + x * 3 + 1]);
-                    bd = Utils.ToRootDelta(b, data[dataOff + x * 3 + 0]);
+                    var (ln, con, cgn) = Utils.RgbToYCoCg(data[dataOff + x * 3 + 2], data[dataOff + x * 3 + 1], data[dataOff + x * 3 + 0]);
 
-                    r += Utils.FromRootDelta(rd);
-                    g += Utils.FromRootDelta(gd);
-                    b += Utils.FromRootDelta(bd);
+                    ld = Utils.ToRootDelta(l, ln);
+                    cod = Utils.ToRootDelta(co, con);
+                    cgd = Utils.ToRootDelta(cg, cgn);
+
+                    l += Utils.FromRootDelta(ld);
+                    co += Utils.FromRootDelta(cod);
+                    cg += Utils.FromRootDelta(cgd);
                 }
             }
 
@@ -55,21 +57,19 @@ internal abstract partial class ImageTransformImpl
                 int dataOff = y * width * 3;
                 int rawOff = y * stride;
 
-                byte r = data[dataOff + 0], g = data[dataOff + 1], b = data[dataOff + 2];
+                var (l, co, cg) = (data[dataOff + 0], data[dataOff + 1], data[dataOff + 2]);
                 int x = 0;
 
                 while (true)
                 {
-                    raw[rawOff + x * 3 + 2] = r;
-                    raw[rawOff + x * 3 + 1] = g;
-                    raw[rawOff + x * 3 + 0] = b;
+                    (raw[rawOff + x * 3 + 2], raw[rawOff + x * 3 + 1], raw[rawOff + x * 3 + 0]) = Utils.YCoCgToRgba(l, co, cg);
 
                     if (++x >= width)
                         break;
 
-                    r += Utils.FromRootDelta(data[dataOff + x * 3 + 0]);
-                    g += Utils.FromRootDelta(data[dataOff + x * 3 + 1]);
-                    b += Utils.FromRootDelta(data[dataOff + x * 3 + 2]);
+                    l += Utils.FromRootDelta(data[dataOff + x * 3 + 0]);
+                    co += Utils.FromRootDelta(data[dataOff + x * 3 + 1]);
+                    cg += Utils.FromRootDelta(data[dataOff + x * 3 + 2]);
                 }
             }
 

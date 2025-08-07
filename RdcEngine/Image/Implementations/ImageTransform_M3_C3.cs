@@ -20,15 +20,15 @@ internal abstract partial class ImageTransformImpl
                 int rdiOffG = height * 3 + height * (width - 1) * 1;
                 int rdiOffB = height * 3 + height * (width - 1) * 2;
 
-                byte r = rdi[height * 0 + y] = data[dataOff + 0];
+                byte r = rdi[height * 0 + y] = data[dataOff + 2];
                 byte g = rdi[height * 1 + y] = data[dataOff + 1];
-                byte b = rdi[height * 2 + y] = data[dataOff + 2];
+                byte b = rdi[height * 2 + y] = data[dataOff + 0];
 
                 for (int x = 1; x < width; ++x)
                 {
-                    byte rd = Utils.ToRootDelta(r, data[dataOff + x * 3 + 0]);
+                    byte rd = Utils.ToRootDelta(r, data[dataOff + x * 3 + 2]);
                     byte gd = Utils.ToRootDelta(g, data[dataOff + x * 3 + 1]);
-                    byte bd = Utils.ToRootDelta(b, data[dataOff + x * 3 + 2]);
+                    byte bd = Utils.ToRootDelta(b, data[dataOff + x * 3 + 0]);
 
                     rdi[rdiOffR + y * (width - 1) + x - 1] = rd;
                     rdi[rdiOffG + y * (width - 1) + x - 1] = gd;
@@ -56,9 +56,9 @@ internal abstract partial class ImageTransformImpl
                 int dataOffB = height * 3 + height * (width - 1) * 2;
                 int rawOff = y * stride;
 
-                byte r = raw[rawOff + 0] = data[height * 0 + y];
+                byte r = raw[rawOff + 2] = data[height * 0 + y];
                 byte g = raw[rawOff + 1] = data[height * 1 + y];
-                byte b = raw[rawOff + 2] = data[height * 2 + y];
+                byte b = raw[rawOff + 0] = data[height * 2 + y];
 
                 for (int x = 1; x < width; ++x)
                 {
@@ -66,9 +66,9 @@ internal abstract partial class ImageTransformImpl
                     g += Utils.FromRootDelta(data[dataOffG + y * (width - 1) + x - 1]);
                     b += Utils.FromRootDelta(data[dataOffB + y * (width - 1) + x - 1]);
 
-                    raw[rawOff + x * 3 + 0] = r;
+                    raw[rawOff + x * 3 + 2] = r;
                     raw[rawOff + x * 3 + 1] = g;
-                    raw[rawOff + x * 3 + 2] = b;
+                    raw[rawOff + x * 3 + 0] = b;
                 }
             }
 

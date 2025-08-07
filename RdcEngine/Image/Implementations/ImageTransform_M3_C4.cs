@@ -21,16 +21,16 @@ internal abstract partial class ImageTransformImpl
                 int rdiOffB = height * 4 + height * (width - 1) * 2;
                 int rdiOffA = height * 4 + height * (width - 1) * 3;
 
-                byte r = rdi[height * 0 + y] = data[dataOff + 0];
+                byte r = rdi[height * 0 + y] = data[dataOff + 2];
                 byte g = rdi[height * 1 + y] = data[dataOff + 1];
-                byte b = rdi[height * 2 + y] = data[dataOff + 2];
+                byte b = rdi[height * 2 + y] = data[dataOff + 0];
                 byte a = rdi[height * 3 + y] = data[dataOff + 3];
 
                 for (int x = 1; x < width; ++x)
                 {
-                    byte rd = Utils.ToRootDelta(r, data[dataOff + x * 4 + 0]);
+                    byte rd = Utils.ToRootDelta(r, data[dataOff + x * 4 + 2]);
                     byte gd = Utils.ToRootDelta(g, data[dataOff + x * 4 + 1]);
-                    byte bd = Utils.ToRootDelta(b, data[dataOff + x * 4 + 2]);
+                    byte bd = Utils.ToRootDelta(b, data[dataOff + x * 4 + 0]);
                     byte ad = Utils.ToRootDelta(a, data[dataOff + x * 4 + 3]);
 
                     rdi[rdiOffR + y * (width - 1) + x - 1] = rd;
@@ -62,9 +62,9 @@ internal abstract partial class ImageTransformImpl
                 int dataOffA = height * 4 + height * (width - 1) * 3;
                 int rawOff = y * stride;
 
-                byte r = raw[rawOff + 0] = data[height * 0 + y];
+                byte r = raw[rawOff + 2] = data[height * 0 + y];
                 byte g = raw[rawOff + 1] = data[height * 1 + y];
-                byte b = raw[rawOff + 2] = data[height * 2 + y];
+                byte b = raw[rawOff + 0] = data[height * 2 + y];
                 byte a = raw[rawOff + 3] = data[height * 3 + y];
 
                 for (int x = 1; x < width; ++x)
@@ -74,9 +74,9 @@ internal abstract partial class ImageTransformImpl
                     b += Utils.FromRootDelta(data[dataOffB + y * (width - 1) + x - 1]);
                     a += Utils.FromRootDelta(data[dataOffA + y * (width - 1) + x - 1]);
 
-                    raw[rawOff + x * 4 + 0] = r;
+                    raw[rawOff + x * 4 + 2] = r;
                     raw[rawOff + x * 4 + 1] = g;
-                    raw[rawOff + x * 4 + 2] = b;
+                    raw[rawOff + x * 4 + 0] = b;
                     raw[rawOff + x * 4 + 3] = a;
                 }
             }
