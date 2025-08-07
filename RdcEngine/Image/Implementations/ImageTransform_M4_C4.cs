@@ -36,15 +36,15 @@ internal abstract partial class ImageTransformImpl
                     var (ln, con, cgn) = Utils.RgbToYCoCg(data[dataOff + x * 4 + 2], data[dataOff + x * 4 + 1], data[dataOff + x * 4 + 0]);
                     byte an = data[dataOff + x * 4 + 3];
 
-                    ld = Utils.ToRootDelta(l, ln);
+                    ld  = Utils.ToRootDelta(l,  ln);
                     cod = Utils.ToRootDelta(co, con);
                     cgd = Utils.ToRootDelta(cg, cgn);
-                    ad = Utils.ToRootDelta(a, an);
+                    ad  = Utils.ToRootDelta(a,  an);
 
-                    l += Utils.FromRootDelta(ld);
+                    l  += Utils.FromRootDelta(ld);
                     co += Utils.FromRootDelta(cod);
                     cg += Utils.FromRootDelta(cgd);
-                    a += Utils.FromRootDelta(ad);
+                    a  += Utils.FromRootDelta(ad);
                 }
             }
 
@@ -62,22 +62,28 @@ internal abstract partial class ImageTransformImpl
                 int dataOff = y * width * 4;
                 int rawOff = y * stride;
 
-                var (l, co, cg) = (data[dataOff + 0], data[dataOff + 1], data[dataOff + 2]);
-                byte a = data[dataOff + 3];
+                byte l  = data[dataOff + 0];
+                byte co = data[dataOff + 1];
+                byte cg = data[dataOff + 2];
+                byte a  = data[dataOff + 3];
                 int x = 0;
 
                 while (true)
                 {
-                    (raw[rawOff + x * 4 + 2], raw[rawOff + x * 4 + 1], raw[rawOff + x * 4 + 0]) = Utils.YCoCgToRgba(l, co, cg);
+                    var (r, g, b) = Utils.YCoCgToRgba(l, co, cg);
+
+                    raw[rawOff + x * 4 + 2] = r;
+                    raw[rawOff + x * 4 + 1] = g;
+                    raw[rawOff + x * 4 + 0] = b;
                     raw[rawOff + x * 4 + 3] = a;
 
                     if (++x >= width)
                         break;
 
-                    l += Utils.FromRootDelta(data[dataOff + x * 4 + 0]);
+                    l  += Utils.FromRootDelta(data[dataOff + x * 4 + 0]);
                     co += Utils.FromRootDelta(data[dataOff + x * 4 + 1]);
                     cg += Utils.FromRootDelta(data[dataOff + x * 4 + 2]);
-                    a += Utils.FromRootDelta(data[dataOff + x * 4 + 3]);
+                    a  += Utils.FromRootDelta(data[dataOff + x * 4 + 3]);
                 }
             }
 
