@@ -7,22 +7,32 @@ using System.Threading.Tasks;
 
 namespace RdcCli;
 
-public readonly struct RdcRootCommand(CommandLineConfiguration Command)
+public sealed class RdcRootCommand : RootCommand
 {
-    public int Invoke(string[] args) => Command.Invoke(args);
+    public CommandLineConfiguration Config { get; set; }
 
-    public Task<int> InvokeAsync(string[] args) => Command.InvokeAsync(args);
+    public RdcRootCommand() : base()
+    {
+        Config = new(this);
+        Options[1].Aliases.Add("-v"); // alias for --version option
+        Directives.Clear(); // disable suggestion directive
+        // cannot disable ugly "Did you mean one of the following?" messages for now...
+    }
+
+    public int Invoke(string[] args) => Config.Invoke(args);
+
+    public Task<int> InvokeAsync(string[] args) => Config.InvokeAsync(args);
 
     public static RdcRootCommand Build()
     {
         var encodeCommand = new Command("encode");
-        encodeCommand.Aliases.Add("-e");
-        encodeCommand.Aliases.Add("--encode");
+        // encodeCommand.Aliases.Add("-e");
+        // encodeCommand.Aliases.Add("--encode");
         encodeCommand.Description = "Encode a media file";
 
         var decodeCommand = new Command("decode");
-        decodeCommand.Aliases.Add("-d");
-        decodeCommand.Aliases.Add("--decode");
+        // decodeCommand.Aliases.Add("-d");
+        // decodeCommand.Aliases.Add("--decode");
         decodeCommand.Description = "Decode a media file";
 
         var formatsOption = new Option<(string, string)>("--format");
@@ -74,7 +84,7 @@ public readonly struct RdcRootCommand(CommandLineConfiguration Command)
         decodeCommand.Add(inputArg);
         decodeCommand.Add(outputArg);
 
-        var root = new RootCommand();
+        var root = new RdcRootCommand();
         root.Description = "Tool for encoding and decoding Root Delta media family";
         root.TreatUnmatchedTokensAsErrors = true;
         root.Add(encodeCommand);
@@ -101,11 +111,11 @@ public readonly struct RdcRootCommand(CommandLineConfiguration Command)
             CommandHandler.RunDecode(formats, input, output, overwrite);
         }));
 
-        var config = new CommandLineConfiguration(root);
+        var config = root.Config;
         config.EnablePosixBundling = false;
         config.EnableDefaultExceptionHandler = true;
 
-        return new(config);
+        return root;
     }
 
     private static Action<ParseResult> TryCatchBlock(RootCommand root, Action<ParseResult> handler)
@@ -122,24 +132,32 @@ public readonly struct RdcRootCommand(CommandLineConfiguration Command)
             }
             catch (Exception ex)
             {
+                int exitCode;
                 var color = Console.ForegroundColor;
                 Console.ForegroundColor = ConsoleColor.Red;
 
-                if (ex is CommandLineException)
+                switch (ex)
                 {
-                    Console.Error.WriteLine($"{ex.Message}.\n");
-                    Console.ForegroundColor = color;
+                    case CommandLineException cliEx:
+                        exitCode = cliError;
+                        Console.Error.WriteLine($"{ex.Message}.");
+                        Console.ForegroundColor = color;
 
-                    root.Parse("-h").Invoke();
-                    Environment.Exit(cliError);
+                        if (cliEx.PrintHelp)
+                        {
+                            Console.Error.WriteLine();
+                            root.Parse("-h").Invoke();
+                        }
+                        break;
+                    case CodecException:
+                        exitCode = codecError;
+                        Console.Error.Write($"Codec error: {ex.Message}.");
+                        break;
+                    default:
+                        exitCode = internalError;
+                        Console.Error.Write($"Internal error: {ex.Message}.");
+                        break;
                 }
-
-                bool isCodecError = ex is CodecException;
-
-                if (isCodecError)
-                    Console.Error.Write($"Codec error: {ex.Message}.");
-                else
-                    Console.Error.Write($"Internal error: {ex.Message}.");
 
                 Console.ForegroundColor = color;
 
@@ -148,7 +166,7 @@ public readonly struct RdcRootCommand(CommandLineConfiguration Command)
                 Console.Error.WriteLine(ex);
 #endif
 
-                Environment.Exit(isCodecError ? codecError : internalError);
+                Environment.Exit(exitCode);
             }
         };
     }

@@ -16,7 +16,7 @@ public static class CommandHandler
         var formats = InferFileArguments(userExtensions, input, ref output);
 
         if (!overwrite && output.Exists)
-            throw new CommandLineException($"File '{output.Name}' already exists. Use --overwrite to allow replacing it");
+            throw new CommandLineException($"File '{output.Name}' already exists. Use --overwrite to allow replacing it", printHelp: true);
 
         var tempFile = new FileInfo(Path.Combine(output.DirectoryName ?? Path.GetTempPath(), Path.GetRandomFileName()));
 
@@ -62,33 +62,33 @@ public static class CommandHandler
                 break;
             case (PngImage, RdiImage):
             case (JpegImage, RdiImage):
-                throw new NotImplementedException("Image format not implemented");
+                throw new CommandLineException("Image format not implemented");
 
             case (GifAnimatedImage, RdaiAnimatedImage):
             case (WebpAnimatedImage, RdaiAnimatedImage):
-                throw new NotImplementedException("Animated image format not implemented");
+                throw new CommandLineException("Animated image format not implemented");
 
             case (Mp4Video, RdvVideo):
             case (AviVideo, RdvVideo):
             case (MovVideo, RdvVideo):
             case (WebmVideo, RdvVideo):
-                throw new NotImplementedException("Video format not implemented");
+                throw new CommandLineException("Video format not implemented");
 
             case (Mp3Audio, RdaAudio):
             case (WavAudio, RdaAudio):
-                throw new NotImplementedException("Audio format not implemented");
+                throw new CommandLineException("Audio format not implemented");
 
             case (_, RdiImage):
             case (_, RdaiAnimatedImage):
             case (_, RdvVideo):
             case (_, RdaAudio):
-                throw new ArgumentException("Conversion not supported");
+                throw new CommandLineException("Conversion not supported");
 
             case (_, UnknownMedia):
-                throw new NotSupportedException("Unknown RDC media format");
+                throw new CommandLineException("Unknown RDC media format");
 
             default:
-                throw new ArgumentException("Not an RDC media format");
+                throw new CommandLineException("Not an RDC media format");
         }
     }
 
@@ -102,33 +102,33 @@ public static class CommandHandler
                 break;
             case (RdiImage, PngImage):
             case (RdiImage, JpegImage):
-                throw new NotImplementedException("Image format not implemented");
+                throw new CommandLineException("Image format not implemented");
 
             case (RdaiAnimatedImage, GifAnimatedImage):
             case (RdaiAnimatedImage, WebpAnimatedImage):
-                throw new NotImplementedException("Animated image format not implemented");
+                throw new CommandLineException("Animated image format not implemented");
 
             case (RdvVideo, Mp4Video):
             case (RdvVideo, AviVideo):
             case (RdvVideo, MovVideo):
             case (RdvVideo, WebmVideo):
-                throw new NotImplementedException("Video format not implemented");
+                throw new CommandLineException("Video format not implemented");
 
             case (RdaAudio, Mp3Audio):
             case (RdaAudio, WavAudio):
-                throw new NotImplementedException("Audio format not implemented");
+                throw new CommandLineException("Audio format not implemented");
 
             case (RdiImage, _):
             case (RdaiAnimatedImage, _):
             case (RdvVideo, _):
             case (RdaAudio, _):
-                throw new ArgumentException("Conversion not supported");
+                throw new CommandLineException("Conversion not supported");
 
             case (UnknownMedia, _):
-                throw new NotSupportedException("Unknown RDC media format");
+                throw new CommandLineException("Unknown RDC media format");
 
             default:
-                throw new ArgumentException("Not an RDC media format");
+                throw new CommandLineException("Not an RDC media format");
         }
     }
 
@@ -147,7 +147,7 @@ public static class CommandHandler
             outputExtension = to;
 
         if (inputExtension is "" || outputExtension is "")
-            throw new CommandLineException("Cannot infer media formats. Specify --format or use files with explicit extensions");
+            throw new CommandLineException("Cannot infer media formats. Specify --format or use files with explicit extensions", printHelp: true);
 
         return (ParseMediaExtension(inputExtension), ParseMediaExtension(outputExtension));
     }

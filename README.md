@@ -63,6 +63,7 @@ Options:
 * `-m`, `--mode`: Set encoding mode
 * `-w`, `--overwrite`: Allow overwriting the output file if it exists
 * `-h`, `--help`: Show help and usage information
+* `-v`, `--version`: Show tool version
 
 ### .NET Library
 
