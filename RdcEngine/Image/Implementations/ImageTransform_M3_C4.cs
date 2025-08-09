@@ -28,10 +28,15 @@ internal abstract partial class ImageTransformImpl
 
                 for (int x = 1; x < width; ++x)
                 {
-                    byte rd = Utils.ToRootDelta(r, data[dataOff + x * 4 + 2]);
-                    byte gd = Utils.ToRootDelta(g, data[dataOff + x * 4 + 1]);
-                    byte bd = Utils.ToRootDelta(b, data[dataOff + x * 4 + 0]);
-                    byte ad = Utils.ToRootDelta(a, data[dataOff + x * 4 + 3]);
+                    byte rn = data[dataOff + x * 4 + 2];
+                    byte gn = data[dataOff + x * 4 + 1];
+                    byte bn = data[dataOff + x * 4 + 0];
+                    byte an = data[dataOff + x * 4 + 3];
+
+                    byte rd = Utils.ToRootDelta(r, rn);
+                    byte gd = Utils.ToRootDelta(g, gn);
+                    byte bd = Utils.ToRootDelta(b, bn);
+                    byte ad = Utils.ToRootDelta(a, an);
 
                     rdi[rdiOffR + y * (width - 1) + x - 1] = rd;
                     rdi[rdiOffG + y * (width - 1) + x - 1] = gd;
@@ -69,10 +74,15 @@ internal abstract partial class ImageTransformImpl
 
                 for (int x = 1; x < width; ++x)
                 {
-                    r += Utils.FromRootDelta(data[dataOffR + y * (width - 1) + x - 1]);
-                    g += Utils.FromRootDelta(data[dataOffG + y * (width - 1) + x - 1]);
-                    b += Utils.FromRootDelta(data[dataOffB + y * (width - 1) + x - 1]);
-                    a += Utils.FromRootDelta(data[dataOffA + y * (width - 1) + x - 1]);
+                    byte rd = data[dataOffR + y * (width - 1) + x - 1];
+                    byte gd = data[dataOffG + y * (width - 1) + x - 1];
+                    byte bd = data[dataOffB + y * (width - 1) + x - 1];
+                    byte ad = data[dataOffA + y * (width - 1) + x - 1];
+
+                    r += Utils.FromRootDelta(rd);
+                    g += Utils.FromRootDelta(gd);
+                    b += Utils.FromRootDelta(bd);
+                    a += Utils.FromRootDelta(ad);
 
                     raw[rawOff + x * 4 + 2] = r;
                     raw[rawOff + x * 4 + 1] = g;

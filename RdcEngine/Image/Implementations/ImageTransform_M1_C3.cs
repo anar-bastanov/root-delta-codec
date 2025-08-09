@@ -31,9 +31,13 @@ internal abstract partial class ImageTransformImpl
                     if (++x >= width)
                         break;
 
-                    rd = Utils.ToRootDelta(r, data[dataOff + x * 3 + 2]);
-                    gd = Utils.ToRootDelta(g, data[dataOff + x * 3 + 1]);
-                    bd = Utils.ToRootDelta(b, data[dataOff + x * 3 + 0]);
+                    byte rn = data[dataOff + x * 3 + 2];
+                    byte gn = data[dataOff + x * 3 + 1];
+                    byte bn = data[dataOff + x * 3 + 0];
+
+                    rd = Utils.ToRootDelta(r, rn);
+                    gd = Utils.ToRootDelta(g, gn);
+                    bd = Utils.ToRootDelta(b, bn);
 
                     r += Utils.FromRootDelta(rd);
                     g += Utils.FromRootDelta(gd);
@@ -67,9 +71,13 @@ internal abstract partial class ImageTransformImpl
                     if (++x >= width)
                         break;
 
-                    r += Utils.FromRootDelta(data[dataOff + x * 3 + 0]);
-                    g += Utils.FromRootDelta(data[dataOff + x * 3 + 1]);
-                    b += Utils.FromRootDelta(data[dataOff + x * 3 + 2]);
+                    byte rd = data[dataOff + x * 3 + 0];
+                    byte gd = data[dataOff + x * 3 + 1];
+                    byte bd = data[dataOff + x * 3 + 2];
+
+                    r += Utils.FromRootDelta(rd);
+                    g += Utils.FromRootDelta(gd);
+                    b += Utils.FromRootDelta(bd);
                 }
             }
 
