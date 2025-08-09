@@ -23,6 +23,7 @@ internal abstract partial class ImageTransformImpl
                 byte rn = data[dataOff + 2];
                 byte gn = data[dataOff + 1];
                 byte bn = data[dataOff + 0];
+
                 var (l, co, cg) = Utils.RgbToYCoCg(rn, gn, bn);
 
                 rdi[height * 0 + y] = l;
