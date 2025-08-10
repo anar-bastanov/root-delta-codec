@@ -37,7 +37,8 @@ internal abstract partial class ImageTransformImpl
             (5, false) => new ImageTransform_M5_C3(),
             (5, true)  => new ImageTransform_M5_C4(),
 
-            (6, _)     => Deprecated(),
+            (6, false) => new ImageTransform_M6_C3(),
+            (6, true)  => new ImageTransform_M6_C4(),
 
             (7, false) => new ImageTransform_M7_C3(),
             (7, true)  => new ImageTransform_M7_C4(),
