@@ -39,6 +39,9 @@ internal abstract partial class ImageTransformImpl
 
             (6, _)     => Deprecated(),
 
+            (7, false) => new ImageTransform_M7_C3(),
+            (7, true)  => new ImageTransform_M7_C4(),
+
             _ => throw new CodecException("Unrecognized RDI encoding mode")
         };
 
