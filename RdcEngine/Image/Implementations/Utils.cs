@@ -79,7 +79,7 @@ internal abstract partial class ImageTransformImpl
             return (ClampToByte(y), ClampToByte(co), ClampToByte(cg));
         }
 
-        public static (byte R, byte G, byte B) YCoCgToRgba(byte y, byte co, byte cg)
+        public static (byte R, byte G, byte B) YCoCgToRgb(byte y, byte co, byte cg)
         {
             int r = y + co - cg;
             int g = y + cg - 128;

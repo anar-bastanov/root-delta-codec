@@ -72,7 +72,7 @@ internal abstract partial class ImageTransformImpl
 
                 while (true)
                 {
-                    var (r, g, b) = Utils.YCoCgToRgba(l, co, cg);
+                    var (r, g, b) = Utils.YCoCgToRgb(l, co, cg);
 
                     raw[rawOff + x * 3 + 2] = r;
                     raw[rawOff + x * 3 + 1] = g;

@@ -111,7 +111,7 @@ internal abstract partial class ImageTransformImpl
                 byte cg = data[2 * sLen + s];
                 byte a  = data[3 * sLen + s];
 
-                var (r, g, b) = Utils.YCoCgToRgba(l, co, cg);
+                var (r, g, b) = Utils.YCoCgToRgb(l, co, cg);
 
                 int off = pixelOffset(0, s);
                 raw[off + 2] = r;
@@ -132,7 +132,7 @@ internal abstract partial class ImageTransformImpl
                     cg += Utils.FromRootDelta(cgd);
                     a  += Utils.FromRootDelta(ad);
 
-                    (r, g, b) = Utils.YCoCgToRgba(l, co, cg);
+                    (r, g, b) = Utils.YCoCgToRgb(l, co, cg);
 
                     int off2 = pixelOffset(p, s);
                     raw[off2 + 2] = r;
