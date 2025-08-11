@@ -31,7 +31,7 @@ internal abstract partial class ImageTransformImpl
 
             (3, false) => new ImageTransform_M3_C3(),
             (3, true)  => new ImageTransform_M3_C4(),
-            
+
             (4, _)     => Deprecated(),
 
             (5, false) => new ImageTransform_M5_C3(),
@@ -42,6 +42,15 @@ internal abstract partial class ImageTransformImpl
 
             (7, false) => new ImageTransform_M7_C3(),
             (7, true)  => new ImageTransform_M7_C4(),
+
+            (8, false) => new ImageTransform_M8_C3(),
+            (8, true)  => new ImageTransform_M8_C4(),
+
+            (9, false) => new ImageTransform_M9_C3(),
+            (9, true)  => new ImageTransform_M9_C4(),
+
+            (10, false) => new ImageTransform_M10_C3(),
+            (10, true)  => new ImageTransform_M10_C4(),
 
             _ => throw new CodecException("Unrecognized RDI encoding mode")
         };

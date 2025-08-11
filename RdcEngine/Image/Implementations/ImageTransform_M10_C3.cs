@@ -4,14 +4,13 @@ namespace RdcEngine.Image.Implementations;
 
 internal abstract partial class ImageTransformImpl
 {
-    private sealed class ImageTransform_M7_C3 : ImageTransformImpl
+    private sealed class ImageTransform_M10_C3 : ImageTransformImpl
     {
         public override RawImage Encode(RawImage rawImage)
         {
             var (width, height, stride, _, _, data) = rawImage;
-            int length = ComputeLength(width, height);
 
-            byte[] rdi = GC.AllocateUninitializedArray<byte>(length);
+            byte[] rdi = GC.AllocateUninitializedArray<byte>(height * width * 3);
 
             bool vertical = height >= width;
             int pLen = vertical ? height : width;
@@ -65,6 +64,14 @@ internal abstract partial class ImageTransformImpl
                 }
             }
 
+            for (int i = headerSize; i < rdi.Length; i += 2)
+            {
+                byte a = rdi[i];
+                byte b = rdi[i + 1 == rdi.Length ? i : i + 1];
+                rdi[headerSize + (i - headerSize) / 2] = (byte)(a | (b << 4));
+            }
+
+            int length = ComputeLength(width, height);
             return rawImage with { Size = length, Data = rdi };
         }
 
@@ -106,9 +113,9 @@ internal abstract partial class ImageTransformImpl
                 {
                     int deltaIndex = s * (pLen - 1) + (p - 1);
 
-                    byte ld  = data[baseL  + deltaIndex];
-                    byte cod = data[baseCo + deltaIndex];
-                    byte cgd = data[baseCg + deltaIndex];
+                    byte ld  = GetNibbleDelta(baseL  + deltaIndex);
+                    byte cod = GetNibbleDelta(baseCo + deltaIndex);
+                    byte cgd = GetNibbleDelta(baseCg + deltaIndex);
 
                     l  += Utils.FromRootDelta(ld);
                     co += Utils.FromRootDelta(cod);
@@ -124,11 +131,19 @@ internal abstract partial class ImageTransformImpl
             }
 
             return rawImage with { Size = raw.Length, Data = raw };
+
+            byte GetNibbleDelta(int index)
+            {
+                byte packed = data[headerSize + (index - headerSize) / 2];
+                return (byte)(index % 2 == 0 ? packed & 0x0F : packed >> 4);
+            }
         }
 
         public override int ComputeLength(int width, int height)
         {
-            return width * height * 3;
+            int deltaCount = (width - 1) * height * 3;
+            int packedDeltaCount = (deltaCount + 1) / 2;
+            return height * 3 + packedDeltaCount;
         }
     }
 }

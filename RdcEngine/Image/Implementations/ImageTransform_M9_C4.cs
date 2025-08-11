@@ -4,7 +4,7 @@ namespace RdcEngine.Image.Implementations;
 
 internal abstract partial class ImageTransformImpl
 {
-    private sealed class ImageTransform_M6_C4 : ImageTransformImpl
+    private sealed class ImageTransform_M9_C4 : ImageTransformImpl
     {
         public override RawImage Encode(RawImage rawImage)
         {
@@ -20,8 +20,8 @@ internal abstract partial class ImageTransformImpl
             int channelBlockSizeL = height * (width - 1);
             int channelBlockSizeC = heightC * (widthC - 1);
 
-            int length = (headerSizeL + channelBlockSizeL + headerSizeC + channelBlockSizeC) * 2;
-            byte[] rdi = GC.AllocateUninitializedArray<byte>(length);
+            int size = (headerSizeL + channelBlockSizeL + headerSizeC + channelBlockSizeC) * 2;
+            byte[] rdi = GC.AllocateUninitializedArray<byte>(size);
 
             int offA1  = 0;
             int offL1  = offA1  + headerSizeA;
@@ -119,6 +119,14 @@ internal abstract partial class ImageTransformImpl
                 }
             }
 
+            for (int i = offA2; i < rdi.Length; i += 2)
+            {
+                byte a = rdi[i];
+                byte b = rdi[i + 1 == rdi.Length ? i : i + 1];
+                rdi[offA2 + (i - offA2) / 2] = (byte)(a | (b << 4));
+            }
+
+            int length = ComputeLength(width, height);
             return rawImage with { Size = length, Data = rdi };
         }
 
@@ -168,8 +176,8 @@ internal abstract partial class ImageTransformImpl
 
                 for (int x = 1; x < width; ++x)
                 {
-                    byte ad = data[offA2 + y * (width - 1) + x - 1];
-                    byte ld = data[offL2 + y * (width - 1) + x - 1];
+                    byte ad = GetNibbleDelta(offA2 + y * (width - 1) + x - 1);
+                    byte ld = GetNibbleDelta(offL2 + y * (width - 1) + x - 1);
 
                     a += Utils.FromRootDelta(ad);
                     l += Utils.FromRootDelta(ld);
@@ -177,8 +185,8 @@ internal abstract partial class ImageTransformImpl
                     if (x % 2 == 0 && widthC > 1)
                     {
                         int deltaIndex = x / 2 - 1;
-                        byte cod = data[baseCo + deltaIndex];
-                        byte cgd = data[baseCg + deltaIndex];
+                        byte cod = GetNibbleDelta(baseCo + deltaIndex);
+                        byte cgd = GetNibbleDelta(baseCg + deltaIndex);
 
                         co += Utils.FromRootDelta(cod);
                         cg += Utils.FromRootDelta(cgd);
@@ -195,6 +203,12 @@ internal abstract partial class ImageTransformImpl
             }
 
             return rawImage with { Size = raw.Length, Data = raw };
+
+            byte GetNibbleDelta(int index)
+            {
+                byte packed = data[offA2 + (index - offA2) / 2];
+                return (byte)(index % 2 == 0 ? packed & 0x0F : packed >> 4);
+            }
         }
 
         public override int ComputeLength(int width, int height)
@@ -207,7 +221,11 @@ internal abstract partial class ImageTransformImpl
             int channelBlockSizeL = height * (width - 1);
             int channelBlockSizeC = heightC * (widthC - 1);
 
-            return (headerSizeL + channelBlockSizeL + headerSizeC + channelBlockSizeC) * 2;
+            int headerSize = (headerSizeL + headerSizeC) * 2;
+            int channelBlockSize = (channelBlockSizeL + channelBlockSizeC) * 2;
+            int packedChannelBlockSize = (channelBlockSize + 1) / 2;
+
+            return headerSize + packedChannelBlockSize;
         }
     }
 }

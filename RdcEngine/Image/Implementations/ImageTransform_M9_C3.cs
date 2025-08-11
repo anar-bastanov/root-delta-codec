@@ -4,7 +4,7 @@ namespace RdcEngine.Image.Implementations;
 
 internal abstract partial class ImageTransformImpl
 {
-    private sealed class ImageTransform_M6_C4 : ImageTransformImpl
+    private sealed class ImageTransform_M9_C3 : ImageTransformImpl
     {
         public override RawImage Encode(RawImage rawImage)
         {
@@ -13,22 +13,18 @@ internal abstract partial class ImageTransformImpl
             int widthC = (width + 1) / 2;
             int heightC = (height + 1) / 2;
 
-            int headerSizeA = height;
             int headerSizeL = height;
             int headerSizeC = heightC;
-            int channelBlockSizeA = height * (width - 1);
             int channelBlockSizeL = height * (width - 1);
             int channelBlockSizeC = heightC * (widthC - 1);
 
-            int length = (headerSizeL + channelBlockSizeL + headerSizeC + channelBlockSizeC) * 2;
-            byte[] rdi = GC.AllocateUninitializedArray<byte>(length);
+            int size = headerSizeL + channelBlockSizeL + (headerSizeC + channelBlockSizeC) * 2;
+            byte[] rdi = GC.AllocateUninitializedArray<byte>(size);
 
-            int offA1  = 0;
-            int offL1  = offA1  + headerSizeA;
+            int offL1  = 0;
             int offCo1 = offL1  + headerSizeL;
             int offCg1 = offCo1 + headerSizeC;
-            int offA2  = offCg1 + headerSizeC;
-            int offL2  = offA2  + channelBlockSizeA;
+            int offL2  = offCg1 + headerSizeC;
             int offCo2 = offL2  + channelBlockSizeL;
             int offCg2 = offCo2 + channelBlockSizeC;
 
@@ -40,28 +36,22 @@ internal abstract partial class ImageTransformImpl
                 byte bn = data[rowBase + 0];
 
                 var (l, _, _) = Utils.RgbToYCoCg(rn, gn, bn);
-                byte a = data[rowBase + 3];
 
-                rdi[offA1 + y] = a;
                 rdi[offL1 + y] = l;
 
                 for (int x = 1; x < width; ++x)
                 {
-                    int px = rowBase + x * 4;
+                    int px = rowBase + x * 3;
                     rn = data[px + 2];
                     gn = data[px + 1];
                     bn = data[px + 0];
 
                     var (ln, _, _) = Utils.RgbToYCoCg(rn, gn, bn);
-                    byte an = data[px + 3];
 
-                    byte ad = Utils.ToRootDelta(a, an);
                     byte ld = Utils.ToRootDelta(l, ln);
 
-                    rdi[offA2 + y * (width - 1) + x - 1] = ad;
                     rdi[offL2 + y * (width - 1) + x - 1] = ld;
 
-                    a += Utils.FromRootDelta(ad);
                     l += Utils.FromRootDelta(ld);
                 }
             }
@@ -74,10 +64,10 @@ internal abstract partial class ImageTransformImpl
                 int x0 = 0;
                 int x1 = 1 < width ? 1 : 0;
 
-                int off00 = y0 * stride + x0 * 4;
-                int off01 = y0 * stride + x1 * 4;
-                int off10 = y1 * stride + x0 * 4;
-                int off11 = y1 * stride + x1 * 4;
+                int off00 = y0 * stride + x0 * 3;
+                int off01 = y0 * stride + x1 * 3;
+                int off10 = y1 * stride + x0 * 3;
+                int off11 = y1 * stride + x1 * 3;
 
                 var (_, co00, cg00) = Utils.RgbToYCoCg(data[off00 + 2], data[off00 + 1], data[off00 + 0]);
                 var (_, co01, cg01) = Utils.RgbToYCoCg(data[off01 + 2], data[off01 + 1], data[off01 + 0]);
@@ -95,10 +85,10 @@ internal abstract partial class ImageTransformImpl
                     x0 = x * 2;
                     x1 = x0 + 1 < width ? x0 + 1 : x0;
 
-                    off00 = y0 * stride + x0 * 4;
-                    off01 = y0 * stride + x1 * 4;
-                    off10 = y1 * stride + x0 * 4;
-                    off11 = y1 * stride + x1 * 4;
+                    off00 = y0 * stride + x0 * 3;
+                    off01 = y0 * stride + x1 * 3;
+                    off10 = y1 * stride + x0 * 3;
+                    off11 = y1 * stride + x1 * 3;
 
                     (_, co00, cg00) = Utils.RgbToYCoCg(data[off00 + 2], data[off00 + 1], data[off00 + 0]);
                     (_, co01, cg01) = Utils.RgbToYCoCg(data[off01 + 2], data[off01 + 1], data[off01 + 0]);
@@ -119,6 +109,14 @@ internal abstract partial class ImageTransformImpl
                 }
             }
 
+            for (int i = offL2; i < rdi.Length; i += 2)
+            {
+                byte a = rdi[i];
+                byte b = rdi[i + 1 == rdi.Length ? i : i + 1];
+                rdi[offL2 + (i - offL2) / 2] = (byte)(a | (b << 4));
+            }
+
+            int length = ComputeLength(width, height);
             return rawImage with { Size = length, Data = rdi };
         }
 
@@ -129,19 +127,15 @@ internal abstract partial class ImageTransformImpl
             int widthC = (width + 1) / 2;
             int heightC = (height + 1) / 2;
 
-            int headerSizeA = height;
             int headerSizeL = height;
             int headerSizeC = heightC;
-            int channelBlockSizeA = height * (width - 1);
             int channelBlockSizeL = height * (width - 1);
             int channelBlockSizeC = heightC * (widthC - 1);
 
-            int offA1  = 0;
-            int offL1  = offA1  + headerSizeA;
+            int offL1  = 0;
             int offCo1 = offL1  + headerSizeL;
             int offCg1 = offCo1 + headerSizeC;
-            int offA2  = offCg1 + headerSizeC;
-            int offL2  = offA2  + channelBlockSizeA;
+            int offL2  = offCg1 + headerSizeC;
             int offCo2 = offL2  + channelBlockSizeL;
             int offCg2 = offCo2 + channelBlockSizeC;
 
@@ -149,36 +143,33 @@ internal abstract partial class ImageTransformImpl
 
             for (int y = 0; y < height; ++y)
             {
-                int rowBase = y * stride;
+                int rowRaw = y * stride;
                 int sy = y / 2;
 
-                byte a  = data[offA1  + y];
                 byte l  = data[offL1  + y];
                 byte co = data[offCo1 + sy];
                 byte cg = data[offCg1 + sy];
 
                 var (r, g, b) = Utils.YCoCgToRgba(l, co, cg);
-                raw[rowBase + 2] = r;
-                raw[rowBase + 1] = g;
-                raw[rowBase + 0] = b;
-                raw[rowBase + 3] = a;
+
+                raw[rowRaw + 2] = r;
+                raw[rowRaw + 1] = g;
+                raw[rowRaw + 0] = b;
 
                 int baseCo = offCo2 + sy * (widthC - 1);
                 int baseCg = offCg2 + sy * (widthC - 1);
 
                 for (int x = 1; x < width; ++x)
                 {
-                    byte ad = data[offA2 + y * (width - 1) + x - 1];
-                    byte ld = data[offL2 + y * (width - 1) + x - 1];
+                    byte ld = GetNibbleDelta(offL2 + y * (width - 1) + x - 1);
 
-                    a += Utils.FromRootDelta(ad);
                     l += Utils.FromRootDelta(ld);
 
                     if (x % 2 == 0 && widthC > 1)
                     {
                         int deltaIndex = x / 2 - 1;
-                        byte cod = data[baseCo + deltaIndex];
-                        byte cgd = data[baseCg + deltaIndex];
+                        byte cod = GetNibbleDelta(baseCo + deltaIndex);
+                        byte cgd = GetNibbleDelta(baseCg + deltaIndex);
 
                         co += Utils.FromRootDelta(cod);
                         cg += Utils.FromRootDelta(cgd);
@@ -186,15 +177,20 @@ internal abstract partial class ImageTransformImpl
 
                     (r, g, b) = Utils.YCoCgToRgba(l, co, cg);
 
-                    int px = rowBase + x * 4;
+                    int px = rowRaw + x * 3;
                     raw[px + 2] = r;
                     raw[px + 1] = g;
                     raw[px + 0] = b;
-                    raw[px + 3] = a;
                 }
             }
 
             return rawImage with { Size = raw.Length, Data = raw };
+
+            byte GetNibbleDelta(int index)
+            {
+                byte packed = data[offL2 + (index - offL2) / 2];
+                return (byte)(index % 2 == 0 ? packed & 0x0F : packed >> 4);
+            }
         }
 
         public override int ComputeLength(int width, int height)
@@ -207,7 +203,11 @@ internal abstract partial class ImageTransformImpl
             int channelBlockSizeL = height * (width - 1);
             int channelBlockSizeC = heightC * (widthC - 1);
 
-            return (headerSizeL + channelBlockSizeL + headerSizeC + channelBlockSizeC) * 2;
+            int headerSize = headerSizeL + headerSizeC * 2;
+            int channelBlockSize = channelBlockSizeL + channelBlockSizeC * 2;
+            int packedChannelBlockSize = (channelBlockSize + 1) / 2;
+
+            return headerSize + packedChannelBlockSize;
         }
     }
 }
