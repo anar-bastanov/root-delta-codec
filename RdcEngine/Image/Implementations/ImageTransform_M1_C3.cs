@@ -18,8 +18,14 @@ internal abstract partial class ImageTransformImpl
                 int dataOff = y * stride;
                 int rdiOff = y * width * 3;
 
-                byte r = data[dataOff + 2], g = data[dataOff + 1], b = data[dataOff + 0];
-                byte rd = r, gd = g, bd = b;
+                byte r = data[dataOff + 2];
+                byte g = data[dataOff + 1];
+                byte b = data[dataOff + 0];
+
+                byte rd = r;
+                byte gd = g;
+                byte bd = b;
+
                 int x = 0;
 
                 while (true)
@@ -35,9 +41,17 @@ internal abstract partial class ImageTransformImpl
                     byte gn = data[dataOff + x * 3 + 1];
                     byte bn = data[dataOff + x * 3 + 0];
 
-                    rd = Utils.ToRootDelta(r, rn);
-                    gd = Utils.ToRootDelta(g, gn);
-                    bd = Utils.ToRootDelta(b, bn);
+                    // byte rn2 = x + 1 < width ? data[dataOff + x * 3 + 2 + 3] : rn;
+                    // byte gn2 = x + 1 < width ? data[dataOff + x * 3 + 1 + 3] : gn;
+                    // byte bn2 = x + 1 < width ? data[dataOff + x * 3 + 0 + 3] : bn;
+
+                    byte rTarget = rn; // Utils.EstimateForward(r, rn, rn2);
+                    byte gTarget = gn; // Utils.EstimateForward(g, gn, gn2);
+                    byte bTarget = bn; // Utils.EstimateForward(b, bn, bn2);
+
+                    rd = Utils.ToRootDelta(r, rTarget);
+                    gd = Utils.ToRootDelta(g, gTarget);
+                    bd = Utils.ToRootDelta(b, bTarget);
 
                     r += Utils.FromRootDelta(rd);
                     g += Utils.FromRootDelta(gd);
@@ -59,14 +73,21 @@ internal abstract partial class ImageTransformImpl
                 int dataOff = y * width * 3;
                 int rawOff = y * stride;
 
-                byte r = data[dataOff + 0], g = data[dataOff + 1], b = data[dataOff + 2];
+                byte r = data[dataOff + 0];
+                byte g = data[dataOff + 1];
+                byte b = data[dataOff + 2];
+
+                byte rTarget = r;
+                byte gTarget = g;
+                byte bTarget = b;
+
                 int x = 0;
 
                 while (true)
                 {
-                    raw[rawOff + x * 3 + 2] = r;
-                    raw[rawOff + x * 3 + 1] = g;
-                    raw[rawOff + x * 3 + 0] = b;
+                    raw[rawOff + x * 3 + 2] = rTarget;
+                    raw[rawOff + x * 3 + 1] = gTarget;
+                    raw[rawOff + x * 3 + 0] = bTarget;
 
                     if (++x >= width)
                         break;
@@ -75,9 +96,25 @@ internal abstract partial class ImageTransformImpl
                     byte gd = data[dataOff + x * 3 + 1];
                     byte bd = data[dataOff + x * 3 + 2];
 
-                    r += Utils.FromRootDelta(rd);
-                    g += Utils.FromRootDelta(gd);
-                    b += Utils.FromRootDelta(bd);
+                    // byte rd2 = x + 1 < width ? data[dataOff + x * 3 + 0 + 3] : rd;
+                    // byte gd2 = x + 1 < width ? data[dataOff + x * 3 + 1 + 3] : gd;
+                    // byte bd2 = x + 1 < width ? data[dataOff + x * 3 + 2 + 3] : bd;
+
+                    byte rn = (byte)(r + Utils.FromRootDelta(rd));
+                    byte gn = (byte)(g + Utils.FromRootDelta(gd));
+                    byte bn = (byte)(b + Utils.FromRootDelta(bd));
+
+                    // byte rn2 = (byte)(rn + Utils.FromRootDelta(rd2));
+                    // byte gn2 = (byte)(gn + Utils.FromRootDelta(gd2));
+                    // byte bn2 = (byte)(bn + Utils.FromRootDelta(bd2));
+
+                    rTarget = rn; // Utils.EstimateReverse(r, rn, rn2);
+                    gTarget = gn; // Utils.EstimateReverse(g, gn, gn2);
+                    bTarget = bn; // Utils.EstimateReverse(b, bn, bn2);
+
+                    r = rn;
+                    g = gn;
+                    b = bn;
                 }
             }
 

@@ -48,7 +48,15 @@ internal abstract partial class ImageTransformImpl
 
                     var (ln, _, _) = Utils.RgbToYCoCg(rn, gn, bn);
 
-                    byte ld = Utils.ToRootDelta(l, ln);
+                    // byte rn2 = x + 1 < width ? data[px + 2 + 3] : rn;
+                    // byte gn2 = x + 1 < width ? data[px + 1 + 3] : gn;
+                    // byte bn2 = x + 1 < width ? data[px + 0 + 3] : bn;
+
+                    // var (ln2, _, _) = Utils.RgbToYCoCg(rn2, gn2, bn2);
+
+                    byte lTarget = ln; // Utils.EstimateForward(l, ln, ln2);
+
+                    byte ld = Utils.ToRootDelta(l, lTarget);
 
                     rdi[offL2 + y * (width - 1) + x - 1] = ld;
 
@@ -137,42 +145,77 @@ internal abstract partial class ImageTransformImpl
             {
                 int rowRaw = y * stride;
                 int sy = y / 2;
+                int syn = Math.Min(sy + 1, heightC - 1);
 
-                byte l  = data[offL1 + y];
-                byte co = data[offCo1 + sy];
-                byte cg = data[offCg1 + sy];
+                byte l = data[offL1 + y];
 
-                var (r, g, b) = Utils.YCoCgToRgb(l, co, cg);
+                byte lTarget = l;
 
-                raw[rowRaw + 2] = r;
-                raw[rowRaw + 1] = g;
-                raw[rowRaw + 0] = b;
+                byte coT = data[offCo1 + sy];
+                byte coB = data[offCo1 + syn];
+                int coi = 0;
 
-                int baseCo = offCo2 + sy * (widthC - 1);
-                int baseCg = offCg2 + sy * (widthC - 1);
+                byte cgT = data[offCg1 + sy];
+                byte cgB = data[offCg1 + syn];
+                int cgi = 0;
 
-                for (int x = 1; x < width; ++x)
+                int x = 0;
+
+                while (true)
                 {
-                    byte ld = data[offL2 + y * (width - 1) + x - 1];
+                    byte codT = data[offCo2 + sy  * (widthC - 1) + coi];
+                    byte codB = data[offCo2 + syn * (widthC - 1) + coi];
+                    byte cgdT = data[offCg2 + sy  * (widthC - 1) + cgi];
+                    byte cgdB = data[offCg2 + syn * (widthC - 1) + cgi];
 
-                    l += Utils.FromRootDelta(ld);
+                    byte conT = (byte)(coT + Utils.FromRootDelta(codT));
+                    byte conB = (byte)(coB + Utils.FromRootDelta(codB));
+                    byte cgnT = (byte)(cgT + Utils.FromRootDelta(cgdT));
+                    byte cgnB = (byte)(cgB + Utils.FromRootDelta(cgdB));
 
-                    if (x % 2 == 0 && widthC > 1)
+                    bool xOdd = (x & 1) is not 0;
+                    bool yOdd = (y & 1) is not 0;
+
+                    var (co, cg) = (xOdd, yOdd) switch
                     {
-                        int deltaIndex = x / 2 - 1;
-                        byte cod = data[baseCo + deltaIndex];
-                        byte cgd = data[baseCg + deltaIndex];
+                        (false, false) => (coT , cgT),
+                        (true, false)  => ((coT + conT + 1) >> 1, (cgT + cgnT + 1) >> 1),
+                        (false, true)  => ((coT + coB  + 1) >> 1, (cgT + cgB  + 1) >> 1),
+                        (true, true)   => ((coT + conT + coB + conB + 2) >> 2, (cgT + cgnT + cgB + cgnB + 2) >> 2)
+                    };
 
-                        co += Utils.FromRootDelta(cod);
-                        cg += Utils.FromRootDelta(cgd);
-                    }
-
-                    (r, g, b) = Utils.YCoCgToRgb(l, co, cg);
+                    var (r, g, b) = Utils.YCoCgToRgb(lTarget, (byte)co, (byte)cg);
 
                     int px = rowRaw + x * 3;
                     raw[px + 2] = r;
                     raw[px + 1] = g;
                     raw[px + 0] = b;
+
+                    if (++x == width)
+                        break;
+
+                    if ((x & 1) is 0)
+                    {
+                        ++coi;
+                        ++cgi;
+
+                        coT = conT;
+                        coB = conB;
+                        cgT = cgnT;
+                        cgB = cgnB;
+                    }
+
+                    byte ld = data[offL2 + y * (width - 1) + x - 1];
+
+                    // byte ld2 = x + 1 < width - 1 ? data[offL2 + y * (width - 1) + x - 1 + 1] : ld;
+
+                    byte ln = (byte)(l + Utils.FromRootDelta(ld));
+
+                    // byte ln2 = (byte)(ln + Utils.FromRootDelta(ld2));
+
+                    lTarget = ln; // Utils.EstimateReverse(l, ln, ln2);
+
+                    l = ln;
                 }
             }
 

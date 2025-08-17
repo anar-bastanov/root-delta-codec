@@ -22,15 +22,13 @@ internal abstract partial class ImageTransformImpl
 
         ImageTransformImpl impl = (mode, argb) switch
         {
-            (1, false) => new ImageTransform_M1_C3(),
-            (1, true)  => new ImageTransform_M1_C4(),
+            (1, _)     => Deprecated(),
 
             // example usage
             (2, false) => RgbNotSupported(),
             (2, true)  => RgbaNotSupported(),
 
-            (3, false) => new ImageTransform_M3_C3(),
-            (3, true)  => new ImageTransform_M3_C4(),
+            (3, _)     => Deprecated(),
 
             (4, _)     => Deprecated(),
 
@@ -40,8 +38,7 @@ internal abstract partial class ImageTransformImpl
             (6, false) => new ImageTransform_M6_C3(),
             (6, true)  => new ImageTransform_M6_C4(),
 
-            (7, false) => new ImageTransform_M7_C3(),
-            (7, true)  => new ImageTransform_M7_C4(),
+            (7, _)     => Deprecated(),
 
             (8, false) => new ImageTransform_M8_C3(),
             (8, true)  => new ImageTransform_M8_C4(),
@@ -49,8 +46,7 @@ internal abstract partial class ImageTransformImpl
             (9, false) => new ImageTransform_M9_C3(),
             (9, true)  => new ImageTransform_M9_C4(),
 
-            (10, false) => new ImageTransform_M10_C3(),
-            (10, true)  => new ImageTransform_M10_C4(),
+            (10, _)    => Deprecated(),
 
             _ => throw new CodecException("Unrecognized RDI encoding mode")
         };

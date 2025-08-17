@@ -70,6 +70,98 @@ internal abstract partial class ImageTransformImpl
             };
         }
 
+        public static byte EstimateForward(byte current, byte target, byte nextTarget)
+        {
+            byte x0 = current;
+            byte x1 = target;
+            byte x2 = nextTarget;
+            int e = x1;
+
+            if (x0 < x1)
+            {
+                if (x1 < x2)
+                {
+                    // e = Math.Min(x0 + (x1 - x0 + 1) * 5 / 4, x2);
+                }
+                else
+                {
+                    ;
+                }
+            }
+            else
+            {
+                if (x1 > x2)
+                {
+                    // e = Math.Max(x0 + (x1 - x0 - 1) * 5 / 4, x2);
+                }
+                else
+                {
+                    ;
+                }
+            }
+
+            return (byte)e;
+
+            // int estimation =
+            //     (x0 < x1 && x1 < x2) ?
+            //         x2 - x1 > x1 - x0 ?
+            //             Math.Min(x0 + (x1 - x0) * 3 / 2, x2) :
+            //             (x1 * 3 + x2) / 4 :
+            //     (x0 > x1 && x1 > x2) ?
+            //         x2 - x1 < x1 - x0 ?
+            //             Math.Max(x0 + (x1 - x0) * 3 / 2, x2) :
+            //             (x1 * 3 + x2) / 4 :
+            //     x1;
+
+            // return (byte)estimation;
+        }
+
+        public static byte EstimateReverse(byte current, byte color, byte nextColor)
+        {
+            byte x0 = current;
+            byte x1 = color;
+            byte x2 = nextColor;
+            int e = x1;
+
+            if (x0 < x1)
+            {
+                if (x1 < x2)
+                {
+                    // if (x1 - x0 > (x2 - x1) * 2)
+                    //     e = x2;
+                }
+                else
+                {
+                    ;
+                }
+            }
+            else
+            {
+                if (x1 > x2)
+                {
+                    // if (x1 - x0 < (x2 - x1) * 2)
+                    //     e = x2;
+                }
+                else
+                {
+                    ;
+                }
+            }
+
+            return (byte)e;
+
+            // int estimation =
+            //     x0 < x1 && x1 < x2 ?
+            //         x1 : //(byte)Math.Min(x0 + 2 * (x1 - x0), x2);
+            //     x0 > x1 && x1 > x2 ?
+            //         Math.Max(x0 + 2 * (x1 - x0), x2) :
+            //     x1;
+
+            // estimation = x0 + FromRootDelta(ToRootDelta(x0, x1));
+
+            // return (byte)estimation;
+        }
+
         public static (byte Y, byte Co, byte Cg) RgbToYCoCg(byte r, byte g, byte b)
         {
             int y = (2 * g + r + b + 1) >> 2;
