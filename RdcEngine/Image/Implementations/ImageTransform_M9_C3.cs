@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 
 namespace RdcEngine.Image.Implementations;
 
@@ -147,16 +148,15 @@ internal abstract partial class ImageTransformImpl
             int offCo2 = offL2  + channelBlockSizeL;
             int offCg2 = offCo2 + channelBlockSizeC;
 
-            byte[] raw = GC.AllocateUninitializedArray<byte>(stride * height);
+            byte[] raw = GC.AllocateUninitializedArray<byte>(height * stride);
 
             for (int y = 0; y < height; ++y)
             {
                 int rowRaw = y * stride;
                 int sy = y / 2;
-                int syn = Math.Min(sy + 1, heightC - 1);
+                int syn = sy + 1 < heightC ? sy + 1 : sy;
 
                 byte l = data[offL1 + y];
-
                 byte lTarget = l;
 
                 byte coT = data[offCo1 + sy];
@@ -204,8 +204,11 @@ internal abstract partial class ImageTransformImpl
 
                     if ((x & 1) is 0)
                     {
-                        ++coi;
-                        ++cgi;
+                        if (cgi + 1 < widthC - 1)
+                        {
+                            ++coi;
+                            ++cgi;
+                        }
 
                         coT = conT;
                         coB = conB;
@@ -232,7 +235,8 @@ internal abstract partial class ImageTransformImpl
             byte GetNibbleDelta(int index)
             {
                 byte packed = data[offL2 + (index - offL2) / 2];
-                return (byte)(index % 2 == 0 ? packed & 0x0F : packed >> 4);
+
+                return (byte)(index % 2 is 0 ? packed & 0x0F : packed >> 4);
             }
         }
 

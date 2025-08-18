@@ -1,4 +1,6 @@
-﻿namespace RdcEngine.Image.Implementations;
+﻿using static RdcEngine.Image.ColorSpace;
+
+namespace RdcEngine.Image.Implementations;
 
 internal abstract partial class ImageTransformImpl
 {
@@ -15,38 +17,41 @@ internal abstract partial class ImageTransformImpl
         if (mode is ushort.MaxValue)
             throw new CodecException("Invalid RDI encoding mode");
 
-        if (colorSpace is not (3 or 4))
+        if (colorSpace is not (1 or 3 or 4))
             throw new CodecException("Invalid color space for RDI");
 
-        var argb = colorSpace is 4;
-
-        ImageTransformImpl impl = (mode, argb) switch
+        ImageTransformImpl impl = (mode, colorSpace) switch
         {
-            (1, _)     => Deprecated(),
+            (1, _) => Deprecated(),
 
             // example usage
-            (2, false) => RgbNotSupported(),
-            (2, true)  => RgbaNotSupported(),
+            (2, Gray) => RgbNotSupported(),
+            (2, Rgb)  => RgbNotSupported(),
+            (2, Rgba) => RgbaNotSupported(),
 
-            (3, _)     => Deprecated(),
+            (3, _) => Deprecated(),
 
-            (4, _)     => Deprecated(),
+            (4, _) => Deprecated(),
 
-            (5, false) => new ImageTransform_M5_C3(),
-            (5, true)  => new ImageTransform_M5_C4(),
+            (5, Gray) => new ImageTransform_M5_C1(),
+            (5, Rgb)  => new ImageTransform_M5_C3(),
+            (5, Rgba) => new ImageTransform_M5_C4(),
 
-            (6, false) => new ImageTransform_M6_C3(),
-            (6, true)  => new ImageTransform_M6_C4(),
+            (6, Gray) => GrayNotSupported(),
+            (6, Rgb)  => new ImageTransform_M6_C3(),
+            (6, Rgba) => new ImageTransform_M6_C4(),
 
-            (7, _)     => Deprecated(),
+            (7, _) => Deprecated(),
 
-            (8, false) => new ImageTransform_M8_C3(),
-            (8, true)  => new ImageTransform_M8_C4(),
+            (8, Gray) => new ImageTransform_M8_C1(),
+            (8, Rgb)  => new ImageTransform_M8_C3(),
+            (8, Rgba) => new ImageTransform_M8_C4(),
 
-            (9, false) => new ImageTransform_M9_C3(),
-            (9, true)  => new ImageTransform_M9_C4(),
+            (9, Gray) => GrayNotSupported(),
+            (9, Rgb)  => new ImageTransform_M9_C3(),
+            (9, Rgba) => new ImageTransform_M9_C4(),
 
-            (10, _)    => Deprecated(),
+            (10, _) => Deprecated(),
 
             _ => throw new CodecException("Unrecognized RDI encoding mode")
         };
@@ -55,6 +60,9 @@ internal abstract partial class ImageTransformImpl
 
         static ImageTransformImpl Deprecated() =>
             throw new CodecException("Deprecated RDI encoding mode");
+
+        static ImageTransformImpl GrayNotSupported() =>
+            throw new CodecException("Gray color space is not supported for given RDI encoding mode");
 
         static ImageTransformImpl RgbNotSupported() =>
             throw new CodecException("RGB color space is not supported for given RDI encoding mode");

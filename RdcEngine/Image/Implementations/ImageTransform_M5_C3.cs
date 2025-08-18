@@ -69,7 +69,7 @@ internal abstract partial class ImageTransformImpl
         {
             var (width, height, stride, _, _, data) = rawImage;
 
-            byte[] raw = GC.AllocateUninitializedArray<byte>(stride * height);
+            byte[] raw = GC.AllocateUninitializedArray<byte>(height * stride);
 
             for (int y = 0; y < height; ++y)
             {

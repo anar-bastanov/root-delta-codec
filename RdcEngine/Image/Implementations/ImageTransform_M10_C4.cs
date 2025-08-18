@@ -86,7 +86,7 @@ internal abstract partial class ImageTransformImpl
         {
             var (width, height, stride, _, _, data) = rawImage;
 
-            byte[] raw = GC.AllocateUninitializedArray<byte>(stride * height);
+            byte[] raw = GC.AllocateUninitializedArray<byte>(height * stride);
 
             bool vertical = height >= width;
             int pLen = vertical ? height : width;
@@ -147,6 +147,7 @@ internal abstract partial class ImageTransformImpl
             byte GetNibbleDelta(int index)
             {
                 byte packed = data[headerSize + (index - headerSize) / 2];
+
                 return (byte)(index % 2 == 0 ? packed & 0x0F : packed >> 4);
             }
         }
@@ -155,6 +156,7 @@ internal abstract partial class ImageTransformImpl
         {
             int deltaCount = (width - 1) * height * 4;
             int packedDeltaCount = (deltaCount + 1) / 2;
+
             return height * 4 + packedDeltaCount;
         }
     }

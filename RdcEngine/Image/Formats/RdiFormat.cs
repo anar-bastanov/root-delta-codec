@@ -2,12 +2,13 @@
 using System.Buffers.Binary;
 using System.IO;
 using System.Runtime.CompilerServices;
+using static RdcEngine.Image.ColorSpace;
 
 namespace RdcEngine.Image.Formats;
 
 internal static class RdiFormat
 {
-    private const ushort HeaderSize = 28;
+    private const ushort BaseHeaderSize = 28;
 
     private const ulong Signature = 0x00494452_00524E41;
 
@@ -17,9 +18,9 @@ internal static class RdiFormat
     public static RawImage Load(Stream rdiInput, out ushort mode)
     {
         StreamValidator.EnsureReadable(rdiInput);
-        StreamValidator.EnsureRemaining(rdiInput, HeaderSize);
+        StreamValidator.EnsureRemaining(rdiInput, BaseHeaderSize);
 
-        Span<byte> header = stackalloc byte[HeaderSize];
+        Span<byte> header = stackalloc byte[BaseHeaderSize];
         rdiInput.ReadExactly(header);
 
         ulong  signature  = BinaryPrimitives.ReadUInt64LittleEndian(header[00..08]);
@@ -37,20 +38,20 @@ internal static class RdiFormat
         if (version is not 1)
             throw new CodecException("Unsupported RDI version");
 
-        if (dataOffset < HeaderSize)
+        if (dataOffset < BaseHeaderSize)
             throw new CodecException("RDI data offset less than header size");
 
         if (width is 0 || height is 0)
             throw new CodecException("Width and height of RDI must be positive");
 
-        if (colorSpace is not (3 or 4))
+        if (colorSpace is not (Gray or Rgb or Rgba))
             throw new CodecException("Unsupported color space for RDI");
 
         if (colorDepth is not 8)
             throw new CodecException("Unsupported color depth for RDI");
 
         const uint hardLimit = 1 << 17;
-        const long maxSize = (1L << 31) - 1;
+        const long maxSize = 1L << 30;
         long size = rdiInput.Length - dataOffset;
 
         if (width is > hardLimit)
@@ -62,7 +63,7 @@ internal static class RdiFormat
         if (size > maxSize)
             throw new CodecException("RDI image too big to load");
 
-        StreamValidator.EnsureRemaining(rdiInput, dataOffset - HeaderSize + 1u);
+        StreamValidator.EnsureRemaining(rdiInput, dataOffset - BaseHeaderSize + 1u);
         rdiInput.Seek(dataOffset, SeekOrigin.Begin);
 
         byte[] raw = GC.AllocateUninitializedArray<byte>((int)size);
@@ -90,10 +91,11 @@ internal static class RdiFormat
         if (height is > hardLimit)
             throw new CodecException($"Height of RDI must not exceed {hardLimit}");
 
-        if (colorSpace is not (3 or 4))
+        if (colorSpace is not (Gray or Rgb or Rgba))
             throw new CodecException("Unsupported color space for RDI");
 
-        Span<byte> header = stackalloc byte[HeaderSize];
+        Span<byte> header = stackalloc byte[BaseHeaderSize];
+
         BinaryPrimitives.WriteUInt64LittleEndian(header[00..08], Signature);
         BinaryPrimitives.WriteUInt16LittleEndian(header[08..10], 1);
         BinaryPrimitives.WriteUInt32LittleEndian(header[10..14], Offset);
@@ -105,7 +107,7 @@ internal static class RdiFormat
 
         rdiOutput.Write(header);
 
-        for (int i = 0; i < Offset - HeaderSize; ++i)
+        for (int i = 0; i < Offset - BaseHeaderSize; ++i)
             rdiOutput.WriteByte(0);
 
         rdiOutput.Write(data, 0, size);

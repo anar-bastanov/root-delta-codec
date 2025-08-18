@@ -155,13 +155,13 @@ internal abstract partial class ImageTransformImpl
             int offCo2 = offL2  + channelBlockSizeL;
             int offCg2 = offCo2 + channelBlockSizeC;
 
-            byte[] raw = GC.AllocateUninitializedArray<byte>(stride * height);
+            byte[] raw = GC.AllocateUninitializedArray<byte>(height * stride);
 
             for (int y = 0; y < height; ++y)
             {
                 int rowRaw = y * stride;
                 int sy = y / 2;
-                int syn = Math.Min(sy + 1, heightC - 1);
+                int syn = sy + 1 < heightC ? sy + 1 : sy;
 
                 byte a = data[offA1 + y];
                 byte aTarget = a;
