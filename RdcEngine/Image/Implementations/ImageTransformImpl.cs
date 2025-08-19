@@ -1,4 +1,5 @@
-﻿using static RdcEngine.Image.ColorSpace;
+﻿using RdcEngine.Exceptions;
+using static RdcEngine.Image.ColorSpace;
 
 namespace RdcEngine.Image.Implementations;
 
@@ -17,8 +18,8 @@ internal abstract partial class ImageTransformImpl
         if (mode is ushort.MaxValue)
             throw new CodecException("Invalid RDI encoding mode");
 
-        if (colorSpace is not (1 or 3 or 4))
-            throw new CodecException("Invalid color space for RDI");
+        if (colorSpace is not (Gray or Rgb or Rgba))
+            throw new VariantNotSupportedException("Invalid color space for RDI");
 
         ImageTransformImpl impl = (mode, colorSpace) switch
         {
@@ -53,21 +54,21 @@ internal abstract partial class ImageTransformImpl
 
             (10, _) => Deprecated(),
 
-            _ => throw new CodecException("Unrecognized RDI encoding mode")
+            _ => throw new VariantNotSupportedException("Unrecognized RDI encoding mode")
         };
 
         return impl;
 
         static ImageTransformImpl Deprecated() =>
-            throw new CodecException("Deprecated RDI encoding mode");
+            throw new VariantNotSupportedException("Deprecated RDI encoding mode");
 
         static ImageTransformImpl GrayNotSupported() =>
-            throw new CodecException("Gray color space is not supported for given RDI encoding mode");
+            throw new VariantNotSupportedException("Gray color space is not supported for given RDI encoding mode");
 
         static ImageTransformImpl RgbNotSupported() =>
-            throw new CodecException("RGB color space is not supported for given RDI encoding mode");
+            throw new VariantNotSupportedException("RGB color space is not supported for given RDI encoding mode");
 
         static ImageTransformImpl RgbaNotSupported() =>
-            throw new CodecException("RGBA color space is not supported for given RDI encoding mode");
+            throw new VariantNotSupportedException("RGBA color space is not supported for given RDI encoding mode");
     }
 }

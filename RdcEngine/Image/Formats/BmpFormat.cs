@@ -1,4 +1,5 @@
-﻿using System;
+﻿using RdcEngine.Exceptions;
+using System;
 using System.Buffers.Binary;
 using System.IO;
 using System.Runtime.CompilerServices;
@@ -41,25 +42,25 @@ internal static class BmpFormat
         uint   palette   = BinaryPrimitives.ReadUInt32LittleEndian(header[46..50]);
 
         if (signature is not Signature)
-            throw new CodecException("Missing BMP signature");
+            throw new MalformedFileException("Missing BMP signature");
 
         if (dibSize is < DibHeaderSize)
-            throw new CodecException("Unsupported DIB header size for BMP");
+            throw new VariantNotSupportedException("Unsupported DIB header size for BMP");
 
         if (/* offBits > fileSize || */ offBits < dibSize + InfoHeaderSize)
-            throw new CodecException("Invalid pixel data offset in BMP header");
+            throw new MalformedFileException("Invalid pixel data offset in BMP header");
 
         if (width is <= 0 || height is 0)
-            throw new CodecException("Invalid BMP dimensions");
+            throw new MalformedFileException("Invalid BMP dimensions");
 
         if (planes is not 1)
-            throw new CodecException("Unsupported number of planes for BMP");
+            throw new VariantNotSupportedException("Unsupported number of planes for BMP");
 
         if (bpp is not (Gray * 8 or Rgb * 8 or Rgba * 8))
-            throw new CodecException("Only Gray, RGB, and RGBA color spaces are supported for BMP");
+            throw new VariantNotSupportedException("Only Gray, RGB, and RGBA color spaces are supported for BMP");
 
         if (compress is not 0)
-            throw new CodecException("Compressed BMP is not supported");
+            throw new VariantNotSupportedException("Compressed BMP is not supported");
 
         const int hardLimit = 1 << 17;
         const long maxSize = 1L << 30;
@@ -67,13 +68,13 @@ internal static class BmpFormat
         int rows = height < 0 ? -height : height;
 
         if (width is > hardLimit)
-            throw new CodecException($"Width of BMP must not exceed {hardLimit}");
+            throw new ConstraintViolationException($"Width of BMP must not exceed {hardLimit}");
 
         if (rows is > hardLimit)
-            throw new CodecException($"Height of BMP must not exceed {hardLimit}");
+            throw new ConstraintViolationException($"Height of BMP must not exceed {hardLimit}");
 
         if (size > maxSize)
-            throw new CodecException("BMP image too big to load");
+            throw new ConstraintViolationException("BMP image too big to load");
 
         uint bytesPerPixel = bpp / 8u;
         long stride = (width * bytesPerPixel + Alignment - 1) & ~(Alignment - 1);
@@ -85,11 +86,11 @@ internal static class BmpFormat
             int paletteEntries = (int)((offBits - BaseHeaderSize) / 4);
             expectedOffBits += 256 * 4;
 
-            if (offBits < expectedOffBits)
-                throw new CodecException("Invalid pixel data offset for grayscale BMP");
-
             if (palette is not (0 or 256) || paletteEntries is not 256)
-                throw new CodecException("Palette size for grayscale BMP must be 256");
+                throw new VariantNotSupportedException("Palette size for grayscale BMP must be 256");
+
+            if (offBits < expectedOffBits)
+                throw new MalformedFileException("Invalid pixel data offset for grayscale BMP");
 
             Span<byte> entries = stackalloc byte[256 * 4];
             bmpInput.ReadExactly(entries);
@@ -102,14 +103,14 @@ internal static class BmpFormat
                 byte a = entries[i * 4 + 3];
 
                 if (r != i || g != i || b != i || a != 0)
-                    throw new CodecException("Only palettes with a grayscale ramp is supported for BMP");
+                    throw new VariantNotSupportedException("Only palettes with a grayscale ramp is supported for BMP");
             }
 
             bmpInput.Seek(offBits, SeekOrigin.Begin);
         }
         else if (offBits is < BaseHeaderSize)
         { 
-            throw new CodecException("Unexpected pixel data offset for true-color BMP");
+            throw new MalformedFileException("Unexpected pixel data offset for true-color BMP");
         }
 
         bmpInput.Seek(offBits, SeekOrigin.Begin);
@@ -117,10 +118,10 @@ internal static class BmpFormat
         long expectedEnd = offBits + pixelBytes;
 
         if (imageSize is not 0 && imageSize != pixelBytes)
-            throw new CodecException("BMP header contains incorrect image size");
+            throw new MalformedFileException("BMP header contains incorrect image size");
 
         if (expectedEnd > bmpInput.Length)
-            throw new CodecException("BMP file has incomplete pixel data");
+            throw new MalformedFileException("BMP file has incomplete pixel data");
 
         StreamValidator.EnsureRemaining(bmpInput, (ulong)(expectedEnd - expectedOffBits));
 
@@ -150,26 +151,26 @@ internal static class BmpFormat
         var (width, height, strideInput, colorSpace, size, data) = rawImage;
 
         if (width is <= 0 || height is <= 0)
-            throw new CodecException("Width and height of BMP must be positive");
+            throw new MalformedDataException("Width and height of BMP must be positive");
 
         const int hardLimit = 1 << 17;
 
         if (width is > hardLimit)
-            throw new CodecException($"Width of BMP must not exceed {hardLimit}");
+            throw new ConstraintViolationException($"Width of BMP must not exceed {hardLimit}");
 
         if (height is > hardLimit)
-            throw new CodecException($"Height of BMP must not exceed {hardLimit}");
+            throw new ConstraintViolationException($"Height of BMP must not exceed {hardLimit}");
 
         if (colorSpace is not (Gray or Rgb or Rgba))
-            throw new CodecException("Only Gray, RGB, and RGBA color spaces are supported for BMP");
+            throw new VariantNotSupportedException("Only Gray, RGB, and RGBA color spaces are supported for BMP");
 
         if (strideInput < width * colorSpace)
-            throw new CodecException("Stride of BMP is too small for its width");
+            throw new MalformedDataException("Stride of BMP is too small for its width");
 
         int stride = (width * colorSpace + Alignment - 1) & ~(Alignment - 1);
 
         if (data.Length < size)
-            throw new CodecException("BMP file has incomplete pixel data");
+            throw new MalformedDataException("BMP file has incomplete pixel data");
 
         uint paletteEntries = colorSpace is Gray ? 256u : 0;
         uint paletteSize = paletteEntries * 4;

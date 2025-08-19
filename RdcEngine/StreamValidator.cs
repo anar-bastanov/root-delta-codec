@@ -1,4 +1,5 @@
-﻿using System;
+﻿using RdcEngine.Exceptions;
+using System;
 using System.IO;
 using System.Runtime.CompilerServices;
 
@@ -12,10 +13,10 @@ internal static class StreamValidator
         ArgumentNullException.ThrowIfNull(stream, paramName);
 
         if (!stream.CanRead)
-            throw new ArgumentException("Stream is not readable", paramName);
+            throw new CodecException("Stream is not readable");
 
         if (requireSeek && !stream.CanSeek)
-            throw new NotSupportedException("Stream must support seeking");
+            throw new CodecException("Stream must support seeking");
     }
 
     public static void EnsureWritable(Stream stream,
@@ -24,7 +25,7 @@ internal static class StreamValidator
         ArgumentNullException.ThrowIfNull(stream, paramName);
 
         if (!stream.CanWrite)
-            throw new ArgumentException("Stream is not writable", paramName);
+            throw new CodecException("Stream is not writable");
     }
 
     public static void EnsureNotSame(Stream stream1, Stream stream2,
@@ -35,7 +36,7 @@ internal static class StreamValidator
         ArgumentNullException.ThrowIfNull(stream2, paramName2);
 
         if (ReferenceEquals(stream1, stream2))
-            throw new ArgumentException("Input and output streams must not be the same", paramName2);
+            throw new CodecException("Input and output streams must not be the same");
     }
 
     public static void EnsureRemaining(Stream stream, ulong neededBytes,
@@ -44,9 +45,9 @@ internal static class StreamValidator
         ArgumentNullException.ThrowIfNull(stream, paramName);
 
         if (!stream.CanSeek)
-            throw new NotSupportedException("Cannot check length on non-seekable stream");
+            throw new CodecException("Cannot check length on non-seekable stream");
 
         if ((ulong)(stream.Length - stream.Position) < neededBytes)
-            throw new InvalidDataException($"Stream does not contain the required {neededBytes} bytes");
+            throw new CodecException($"Stream does not contain the required {neededBytes} bytes");
     }
 }

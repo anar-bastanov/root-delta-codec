@@ -1,4 +1,5 @@
-﻿using RdcEngine.Image.Implementations;
+﻿using RdcEngine.Exceptions;
+using RdcEngine.Image.Implementations;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
@@ -22,7 +23,7 @@ internal static class RootDeltaImageTransform
         var impl = GetImplementation(mode, colorSpace);
 
         if (impl.ComputeLength(width, height) > size)
-            throw new CodecException("RDI file has incomplete pixel data");
+            throw new MalformedFileException("RDI file has incomplete pixel data");
 
         return impl.Decode(rawImage);
     }

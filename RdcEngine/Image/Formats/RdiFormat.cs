@@ -1,4 +1,5 @@
-﻿using System;
+﻿using RdcEngine.Exceptions;
+using System;
 using System.Buffers.Binary;
 using System.IO;
 using System.Runtime.CompilerServices;
@@ -33,35 +34,35 @@ internal static class RdiFormat
                mode       = BinaryPrimitives.ReadUInt16LittleEndian(header[26..28]);
 
         if (signature is not Signature)
-            throw new CodecException("Missing RDI signature");
+            throw new MalformedFileException("Missing RDI signature");
 
         if (version is not 1)
-            throw new CodecException("Unsupported RDI version");
+            throw new VariantNotSupportedException("Unsupported RDI version");
 
         if (dataOffset < BaseHeaderSize)
-            throw new CodecException("RDI data offset less than header size");
+            throw new MalformedFileException("RDI data offset less than header size");
 
         if (width is 0 || height is 0)
-            throw new CodecException("Width and height of RDI must be positive");
+            throw new MalformedFileException("Width and height of RDI must be positive");
 
         if (colorSpace is not (Gray or Rgb or Rgba))
-            throw new CodecException("Unsupported color space for RDI");
+            throw new VariantNotSupportedException("Unsupported color space for RDI");
 
         if (colorDepth is not 8)
-            throw new CodecException("Unsupported color depth for RDI");
+            throw new VariantNotSupportedException("Unsupported color depth for RDI");
 
         const uint hardLimit = 1 << 17;
         const long maxSize = 1L << 30;
         long size = rdiInput.Length - dataOffset;
 
         if (width is > hardLimit)
-            throw new CodecException($"Width of RDI must not exceed {hardLimit}");
+            throw new ConstraintViolationException($"Width of RDI must not exceed {hardLimit}");
 
         if (height is > hardLimit)
-            throw new CodecException($"Height of RDI must not exceed {hardLimit}");
+            throw new ConstraintViolationException($"Height of RDI must not exceed {hardLimit}");
 
         if (size > maxSize)
-            throw new CodecException("RDI image too big to load");
+            throw new ConstraintViolationException("RDI image too big to load");
 
         StreamValidator.EnsureRemaining(rdiInput, dataOffset - BaseHeaderSize + 1u);
         rdiInput.Seek(dataOffset, SeekOrigin.Begin);
@@ -81,18 +82,18 @@ internal static class RdiFormat
         var (width, height, _, colorSpace, size, data) = rawImage;
 
         if (width is <= 0 || height is <= 0)
-            throw new CodecException("Width and height of RDI must be positive");
+            throw new MalformedDataException("Width and height of RDI must be positive");
 
         const int hardLimit = 1 << 17;
 
         if (width is > hardLimit)
-            throw new CodecException($"Width of RDI must not exceed {hardLimit}");
+            throw new ConstraintViolationException($"Width of RDI must not exceed {hardLimit}");
 
         if (height is > hardLimit)
-            throw new CodecException($"Height of RDI must not exceed {hardLimit}");
+            throw new ConstraintViolationException($"Height of RDI must not exceed {hardLimit}");
 
         if (colorSpace is not (Gray or Rgb or Rgba))
-            throw new CodecException("Unsupported color space for RDI");
+            throw new VariantNotSupportedException("Unsupported color space for RDI");
 
         Span<byte> header = stackalloc byte[BaseHeaderSize];
 

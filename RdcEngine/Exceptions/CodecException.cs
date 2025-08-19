@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace RdcEngine;
+namespace RdcEngine.Exceptions;
 
 public class CodecException : Exception
 {
