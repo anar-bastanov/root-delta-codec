@@ -5,7 +5,7 @@ namespace RdcEngine.Image.Implementations;
 
 internal abstract partial class ImageTransformImpl
 {
-    public const ushort DefaultMode = 0x0005;
+    public const ushort DefaultMode = 0x0008;
 
     public abstract RawImage Encode(RawImage rawImage);
 
