@@ -156,7 +156,8 @@ internal abstract partial class ImageTransformImpl
 
             byte GetNibbleDelta(int index)
             {
-                byte packed = data[headerSize + (index - headerSize) / 2];
+                index -= headerSize;
+                byte packed = data[headerSize + index / 2];
 
                 return (byte)(index % 2 is 0 ? packed & 0x0F : packed >> 4);
             }
