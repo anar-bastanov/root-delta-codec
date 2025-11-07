@@ -11,6 +11,9 @@ internal static class RootDeltaImageTransform
 
     public static RawImage Encode(RawImage rawImage, ushort mode)
     {
+        if (mode is 0)
+            mode = ImageTransformImpl.DefaultMode;
+
         var (_, _, _, colorSpace, _, _) = rawImage;
         var impl = GetImplementation(mode, colorSpace);
 
@@ -30,9 +33,6 @@ internal static class RootDeltaImageTransform
 
     private static ImageTransformImpl GetImplementation(ushort mode, int colorSpace)
     {
-        if (mode is 0)
-            mode = ImageTransformImpl.DefaultMode;
-
         int key = (colorSpace << 16) | (mode << 0);
         ref var t = ref CollectionsMarshal.GetValueRefOrAddDefault(Implementations, key, out _);
 
