@@ -26,11 +26,7 @@ internal abstract partial class ImageTransformImpl
                 {
                     byte gn = data[dataOff + x * 1 + 0];
 
-                    // byte gn2 = x + 1 < width ? data[dataOff + x * 1 + 0 + 1] : gn;
-
-                    byte gTarget = gn; // Utils.EstimateForward(g, gn, gn2);
-
-                    byte gd = Utils.ToRootDelta(g, gTarget);
+                    byte gd = Utils.ToRootDelta(g, gn);
 
                     rdi[rdiOffG + y * (width - 1) + x - 1] = gd;
 
@@ -60,17 +56,11 @@ internal abstract partial class ImageTransformImpl
                 {
                     byte gd = data[dataOffG + y * (width - 1) + x - 1];
 
-                    // byte gd2 = x + 1 < width - 1 ? data[dataOffG + y * (width - 1) + x - 1 + 1] : gd;
-
                     byte gn = (byte)(g + Utils.FromRootDelta(gd));
-
-                    // byte gn2 = (byte)(gn + Utils.FromRootDelta(gd2));
-
-                    byte gTarget = gn; // Utils.EstimateReverse(g, gn, gn2);
 
                     g = gn;
 
-                    raw[rawOff + x * 1 + 0] = gTarget;
+                    raw[rawOff + x * 1 + 0] = gn;
                 }
             }
 

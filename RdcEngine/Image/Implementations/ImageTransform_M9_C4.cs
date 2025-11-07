@@ -55,18 +55,8 @@ internal abstract partial class ImageTransformImpl
 
                     var (ln, _, _) = Utils.RgbToYCoCg(rn, gn, bn);
 
-                    // byte rn2 = x + 1 < width ? data[px + 2 + 4] : rn;
-                    // byte gn2 = x + 1 < width ? data[px + 1 + 4] : gn;
-                    // byte bn2 = x + 1 < width ? data[px + 0 + 4] : bn;
-                    // byte an2 = x + 1 < width ? data[px + 3 + 4] : an;
-
-                    // var (ln2, _, _) = Utils.RgbToYCoCg(rn2, gn2, bn2);
-
-                    byte aTarget = an; // Utils.EstimateForward(a, an, an2);
-                    byte lTarget = ln; // Utils.EstimateForward(l, ln, ln2);
-
-                    byte ad = Utils.ToRootDelta(a, aTarget);
-                    byte ld = Utils.ToRootDelta(l, lTarget);
+                    byte ad = Utils.ToRootDelta(a, an);
+                    byte ld = Utils.ToRootDelta(l, ln);
 
                     rdi[offA2 + y * (width - 1) + x - 1] = ad;
                     rdi[offL2 + y * (width - 1) + x - 1] = ld;
@@ -133,6 +123,7 @@ internal abstract partial class ImageTransformImpl
             {
                 byte a = rdi[i];
                 byte b = rdi[i + 1 == rdi.Length ? i : i + 1];
+
                 rdi[offA2 + (i - offA2) / 2] = (byte)(a | (b << 4));
             }
 
@@ -164,7 +155,7 @@ internal abstract partial class ImageTransformImpl
             int offCg2 = offCo2 + channelBlockSizeC;
 
             byte[] raw = GC.AllocateUninitializedArray<byte>(height * stride);
-            
+
             for (int y = 0; y < height; ++y)
             {
                 int rowRaw = y * stride;
@@ -172,10 +163,8 @@ internal abstract partial class ImageTransformImpl
                 int syn = sy + 1 < heightC ? sy + 1 : sy;
 
                 byte a = data[offA1 + y];
-                byte aTarget = a;
 
                 byte l = data[offL1 + y];
-                byte lTarget = l;
 
                 byte coT = data[offCo1 + sy];
                 byte coB = data[offCo1 + syn];
@@ -210,13 +199,13 @@ internal abstract partial class ImageTransformImpl
                         (true, true)   => ((coT + conT + coB + conB + 2) >> 2, (cgT + cgnT + cgB + cgnB + 2) >> 2)
                     };
 
-                    var (r, g, b) = Utils.YCoCgToRgb(lTarget, (byte)co, (byte)cg);
+                    var (r, g, b) = Utils.YCoCgToRgb(l, (byte)co, (byte)cg);
 
                     int px = rowRaw + x * 4;
                     raw[px + 2] = r;
                     raw[px + 1] = g;
                     raw[px + 0] = b;
-                    raw[px + 3] = aTarget;
+                    raw[px + 3] = a;
 
                     if (++x == width)
                         break;
@@ -238,17 +227,8 @@ internal abstract partial class ImageTransformImpl
                     byte ad = GetNibbleDelta(offA2 + y * (width - 1) + x - 1);
                     byte ld = GetNibbleDelta(offL2 + y * (width - 1) + x - 1);
 
-                    // byte ad2 = x + 1 < width - 1 ? GetNibbleDelta(offA2 + y * (width - 1) + x - 1 + 1) : ad;
-                    // byte ld2 = x + 1 < width - 1 ? GetNibbleDelta(offL2 + y * (width - 1) + x - 1 + 1) : ld;
-
                     byte an = (byte)(a + Utils.FromRootDelta(ad));
                     byte ln = (byte)(l + Utils.FromRootDelta(ld));
-
-                    // byte an2 = (byte)(an + Utils.FromRootDelta(ad2));
-                    // byte ln2 = (byte)(ln + Utils.FromRootDelta(ld2));
-
-                    aTarget = an; // Utils.EstimateReverse(a, an, an2);
-                    lTarget = ln; // Utils.EstimateReverse(l, ln, ln2);
 
                     a = an;
                     l = ln;

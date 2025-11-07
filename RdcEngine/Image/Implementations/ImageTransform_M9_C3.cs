@@ -49,15 +49,7 @@ internal abstract partial class ImageTransformImpl
 
                     var (ln, _, _) = Utils.RgbToYCoCg(rn, gn, bn);
 
-                    // byte rn2 = x + 1 < width ? data[px + 2 + 3] : rn;
-                    // byte gn2 = x + 1 < width ? data[px + 1 + 3] : gn;
-                    // byte bn2 = x + 1 < width ? data[px + 0 + 3] : bn;
-
-                    // var (ln2, _, _) = Utils.RgbToYCoCg(rn2, gn2, bn2);
-
-                    byte lTarget = ln; // Utils.EstimateForward(l, ln, ln2);
-
-                    byte ld = Utils.ToRootDelta(l, lTarget);
+                    byte ld = Utils.ToRootDelta(l, ln);
 
                     rdi[offL2 + y * (width - 1) + x - 1] = ld;
 
@@ -122,6 +114,7 @@ internal abstract partial class ImageTransformImpl
             {
                 byte a = rdi[i];
                 byte b = rdi[i + 1 == rdi.Length ? i : i + 1];
+
                 rdi[offL2 + (i - offL2) / 2] = (byte)(a | (b << 4));
             }
 
@@ -157,7 +150,6 @@ internal abstract partial class ImageTransformImpl
                 int syn = sy + 1 < heightC ? sy + 1 : sy;
 
                 byte l = data[offL1 + y];
-                byte lTarget = l;
 
                 byte coT = data[offCo1 + sy];
                 byte coB = data[offCo1 + syn];
@@ -192,7 +184,7 @@ internal abstract partial class ImageTransformImpl
                         (true, true)   => ((coT + conT + coB + conB + 2) >> 2, (cgT + cgnT + cgB + cgnB + 2) >> 2)
                     };
 
-                    var (r, g, b) = Utils.YCoCgToRgb(lTarget, (byte)co, (byte)cg);
+                    var (r, g, b) = Utils.YCoCgToRgb(l, (byte)co, (byte)cg);
 
                     int px = rowRaw + x * 3;
                     raw[px + 2] = r;
@@ -218,13 +210,7 @@ internal abstract partial class ImageTransformImpl
 
                     byte ld = GetNibbleDelta(offL2 + y * (width - 1) + x - 1);
 
-                    // byte ld2 = x + 1 < width - 1 ? GetNibbleDelta(offL2 + y * (width - 1) + x - 1 + 1) : ld;
-
                     byte ln = (byte)(l + Utils.FromRootDelta(ld));
-
-                    // byte ln2 = (byte)(ln + Utils.FromRootDelta(ld2));
-
-                    lTarget = ln; // Utils.EstimateReverse(l, ln, ln2);
 
                     l = ln;
                 }
