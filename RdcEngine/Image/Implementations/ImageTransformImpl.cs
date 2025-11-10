@@ -23,16 +23,11 @@ internal abstract partial class ImageTransformImpl
 
         ImageTransformImpl impl = (mode, colorSpace) switch
         {
-            (1, _) => Deprecated(),
+            (1, _) => ObsoleteMode(),
 
-            // example usage
-            (2, Gray) => RgbNotSupported(),
-            (2, Rgb)  => RgbNotSupported(),
-            (2, Rgba) => RgbaNotSupported(),
+            (3, _) => ObsoleteMode(),
 
-            (3, _) => Deprecated(),
-
-            (4, _) => Deprecated(),
+            (4, _) => ObsoleteMode(),
 
             (5, Gray) => new ImageTransform_M5_C1(),
             (5, Rgb)  => new ImageTransform_M5_C3(),
@@ -42,7 +37,7 @@ internal abstract partial class ImageTransformImpl
             (6, Rgb)  => new ImageTransform_M6_C3(),
             (6, Rgba) => new ImageTransform_M6_C4(),
 
-            (7, _) => Deprecated(),
+            (7, _) => ObsoleteMode(),
 
             (8, Gray) => new ImageTransform_M8_C1(),
             (8, Rgb)  => new ImageTransform_M8_C3(),
@@ -52,23 +47,28 @@ internal abstract partial class ImageTransformImpl
             (9, Rgb)  => new ImageTransform_M9_C3(),
             (9, Rgba) => new ImageTransform_M9_C4(),
 
-            (10, _) => Deprecated(),
+            (10, _) => ObsoleteMode(),
 
-            _ => throw new VariantNotSupportedException("Unrecognized RDI encoding mode")
+            _ => UnrecognizedMode(),
         };
 
         return impl;
 
-        static ImageTransformImpl Deprecated() =>
-            throw new VariantNotSupportedException("Deprecated RDI encoding mode");
+        static ImageTransformImpl UnrecognizedMode() =>
+             throw new VariantNotSupportedException("Unrecognized RDI encoding mode");
+
+        static ImageTransformImpl ObsoleteMode() =>
+            throw new VariantNotSupportedException("Obsolete RDI encoding mode");
 
         static ImageTransformImpl GrayNotSupported() =>
             throw new VariantNotSupportedException("Gray color space is not supported for given RDI encoding mode");
 
+#pragma warning disable CS8321 // Local function is declared but never used
         static ImageTransformImpl RgbNotSupported() =>
             throw new VariantNotSupportedException("RGB color space is not supported for given RDI encoding mode");
 
         static ImageTransformImpl RgbaNotSupported() =>
             throw new VariantNotSupportedException("RGBA color space is not supported for given RDI encoding mode");
+#pragma warning restore CS8321
     }
 }
