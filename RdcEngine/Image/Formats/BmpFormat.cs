@@ -19,6 +19,10 @@ internal static class BmpFormat
 
     private const ushort Alignment = 4;
 
+    private const int MaxImageLength = 1 << 14;
+
+    private const uint MaxPayloadSize = 1u << 30;
+
     [SkipLocalsInit]
     public static RawImage Load(Stream bmpInput)
     {
@@ -62,18 +66,16 @@ internal static class BmpFormat
         if (compress is not 0)
             throw new VariantNotSupportedException("Compressed BMP is not supported");
 
-        const int hardLimit = 1 << 17;
-        const long maxSize = 1L << 30;
+        if (width is > MaxImageLength)
+            throw new ConstraintViolationException($"Width of BMP must not exceed {MaxImageLength}");
+
+        if (height is > MaxImageLength)
+            throw new ConstraintViolationException($"Height of BMP must not exceed {MaxImageLength}");
+
         long size = bmpInput.Length - offBits;
         int rows = height < 0 ? -height : height;
 
-        if (width is > hardLimit)
-            throw new ConstraintViolationException($"Width of BMP must not exceed {hardLimit}");
-
-        if (rows is > hardLimit)
-            throw new ConstraintViolationException($"Height of BMP must not exceed {hardLimit}");
-
-        if (size > maxSize)
+        if (size > MaxPayloadSize)
             throw new ConstraintViolationException("BMP image too big to load");
 
         uint bytesPerPixel = bpp / 8u;
@@ -109,7 +111,7 @@ internal static class BmpFormat
             bmpInput.Seek(offBits, SeekOrigin.Begin);
         }
         else if (offBits is < BaseHeaderSize)
-        { 
+        {
             throw new MalformedFileException("Unexpected pixel data offset for true-color BMP");
         }
 
@@ -153,13 +155,11 @@ internal static class BmpFormat
         if (width is <= 0 || height is <= 0)
             throw new MalformedDataException("Width and height of BMP must be positive");
 
-        const int hardLimit = 1 << 17;
+        if (width is > MaxImageLength)
+            throw new ConstraintViolationException($"Width of BMP must not exceed {MaxImageLength}");
 
-        if (width is > hardLimit)
-            throw new ConstraintViolationException($"Width of BMP must not exceed {hardLimit}");
-
-        if (height is > hardLimit)
-            throw new ConstraintViolationException($"Height of BMP must not exceed {hardLimit}");
+        if (height is > MaxImageLength)
+            throw new ConstraintViolationException($"Height of BMP must not exceed {MaxImageLength}");
 
         if (colorSpace is not (Gray or Rgb or Rgba))
             throw new VariantNotSupportedException("Only Gray, RGB, and RGBA color spaces are supported for BMP");

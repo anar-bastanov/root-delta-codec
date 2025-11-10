@@ -11,9 +11,13 @@ internal static class RdiFormat
 {
     private const ushort BaseHeaderSize = 28;
 
-    private const ulong Signature = 0x00494452_00524E41;
+    private const ulong Signature = 0x00494452_00524E41uL;
 
     private const ushort Offset = 32;
+
+    private const uint MaxImageLength = 1u << 14;
+
+    private const uint MaxPayloadSize = 1u << 30;
 
     [SkipLocalsInit]
     public static RawImage Load(Stream rdiInput, out ushort mode)
@@ -51,17 +55,15 @@ internal static class RdiFormat
         if (colorDepth is not 8)
             throw new VariantNotSupportedException("Unsupported color depth for RDI");
 
-        const uint hardLimit = 1 << 17;
-        const long maxSize = 1L << 30;
+        if (width is > MaxImageLength)
+            throw new ConstraintViolationException($"Width of RDI must not exceed {MaxImageLength}");
+
+        if (height is > MaxImageLength)
+            throw new ConstraintViolationException($"Height of RDI must not exceed {MaxImageLength}");
+
         long size = rdiInput.Length - dataOffset;
 
-        if (width is > hardLimit)
-            throw new ConstraintViolationException($"Width of RDI must not exceed {hardLimit}");
-
-        if (height is > hardLimit)
-            throw new ConstraintViolationException($"Height of RDI must not exceed {hardLimit}");
-
-        if (size > maxSize)
+        if (size > MaxPayloadSize)
             throw new ConstraintViolationException("RDI image too big to load");
 
         StreamValidator.EnsureRemaining(rdiInput, dataOffset - BaseHeaderSize + 1u);
@@ -84,13 +86,11 @@ internal static class RdiFormat
         if (width is <= 0 || height is <= 0)
             throw new MalformedDataException("Width and height of RDI must be positive");
 
-        const int hardLimit = 1 << 17;
+        if (width is > (int)MaxImageLength)
+            throw new ConstraintViolationException($"Width of RDI must not exceed {MaxImageLength}");
 
-        if (width is > hardLimit)
-            throw new ConstraintViolationException($"Width of RDI must not exceed {hardLimit}");
-
-        if (height is > hardLimit)
-            throw new ConstraintViolationException($"Height of RDI must not exceed {hardLimit}");
+        if (height is > (int)MaxImageLength)
+            throw new ConstraintViolationException($"Height of RDI must not exceed {MaxImageLength}");
 
         if (colorSpace is not (Gray or Rgb or Rgba))
             throw new VariantNotSupportedException("Unsupported color space for RDI");
