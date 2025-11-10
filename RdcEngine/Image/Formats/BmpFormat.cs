@@ -3,7 +3,7 @@ using System;
 using System.Buffers.Binary;
 using System.IO;
 using System.Runtime.CompilerServices;
-using static RdcEngine.Image.ColorSpace;
+using static RdcEngine.Image.ColorModel;
 
 namespace RdcEngine.Image.Formats;
 
@@ -61,7 +61,7 @@ internal static class BmpFormat
             throw new VariantNotSupportedException("Unsupported number of planes for BMP");
 
         if (bpp is not (Gray * 8 or Rgb * 8 or Rgba * 8))
-            throw new VariantNotSupportedException("Only Gray, RGB, and RGBA color spaces are supported for BMP");
+            throw new VariantNotSupportedException("Only Gray, RGB, and RGBA color models are supported for BMP");
 
         if (compress is not 0)
             throw new VariantNotSupportedException("Compressed BMP is not supported");
@@ -150,7 +150,7 @@ internal static class BmpFormat
         StreamValidator.EnsureWritable(bmpOutput);
         ArgumentNullException.ThrowIfNull(rawImage.Data);
 
-        var (width, height, strideInput, colorSpace, size, data) = rawImage;
+        var (width, height, strideInput, colorModel, size, data) = rawImage;
 
         if (width is <= 0 || height is <= 0)
             throw new MalformedDataException("Width and height of BMP must be positive");
@@ -161,18 +161,18 @@ internal static class BmpFormat
         if (height is > MaxImageLength)
             throw new ConstraintViolationException($"Height of BMP must not exceed {MaxImageLength}");
 
-        if (colorSpace is not (Gray or Rgb or Rgba))
-            throw new VariantNotSupportedException("Only Gray, RGB, and RGBA color spaces are supported for BMP");
+        if (colorModel is not (Gray or Rgb or Rgba))
+            throw new VariantNotSupportedException("Only Gray, RGB, and RGBA color models are supported for BMP");
 
-        if (strideInput < width * colorSpace)
+        if (strideInput < width * colorModel)
             throw new MalformedDataException("Stride of BMP is too small for its width");
 
-        int stride = (width * colorSpace + Alignment - 1) & ~(Alignment - 1);
+        int stride = (width * colorModel + Alignment - 1) & ~(Alignment - 1);
 
         if (data.Length < size)
             throw new MalformedDataException("BMP file has incomplete pixel data");
 
-        uint paletteEntries = colorSpace is Gray ? 256u : 0;
+        uint paletteEntries = colorModel is Gray ? 256u : 0;
         uint paletteSize = paletteEntries * 4;
         uint offBits = BaseHeaderSize + paletteSize;
         int fileSize = (int)offBits + size;
@@ -189,7 +189,7 @@ internal static class BmpFormat
         BinaryPrimitives.WriteInt32LittleEndian (header[18..22], width);
         BinaryPrimitives.WriteInt32LittleEndian (header[22..26], -height);
         BinaryPrimitives.WriteUInt16LittleEndian(header[26..28], 1);
-        BinaryPrimitives.WriteUInt16LittleEndian(header[28..30], (ushort)(colorSpace * 8));
+        BinaryPrimitives.WriteUInt16LittleEndian(header[28..30], (ushort)(colorModel * 8));
         BinaryPrimitives.WriteUInt32LittleEndian(header[30..34], 0);
         BinaryPrimitives.WriteUInt32LittleEndian(header[34..38], (uint)size);
         BinaryPrimitives.WriteInt32LittleEndian (header[38..42], 0);
@@ -199,7 +199,7 @@ internal static class BmpFormat
 
         bmpOutput.Write(header);
 
-        if (colorSpace is Gray)
+        if (colorModel is Gray)
         {
             for (int i = 0; i < 256; ++i)
             {
@@ -210,7 +210,7 @@ internal static class BmpFormat
             }
         }
 
-        for (int i = 0, row = width * colorSpace, pad = stride - row; i < size; i += row)
+        for (int i = 0, row = width * colorModel, pad = stride - row; i < size; i += row)
         {
             bmpOutput.Write(data, i, row);
 

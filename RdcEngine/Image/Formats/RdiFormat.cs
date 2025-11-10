@@ -3,7 +3,7 @@ using System;
 using System.Buffers.Binary;
 using System.IO;
 using System.Runtime.CompilerServices;
-using static RdcEngine.Image.ColorSpace;
+using static RdcEngine.Image.ColorModel;
 
 namespace RdcEngine.Image.Formats;
 
@@ -33,7 +33,7 @@ internal static class RdiFormat
         uint   dataOffset = BinaryPrimitives.ReadUInt32LittleEndian(header[10..14]);
         uint   width      = BinaryPrimitives.ReadUInt32LittleEndian(header[14..18]);
         uint   height     = BinaryPrimitives.ReadUInt32LittleEndian(header[18..22]);
-        ushort colorSpace = BinaryPrimitives.ReadUInt16LittleEndian(header[22..24]);
+        ushort colorModel = BinaryPrimitives.ReadUInt16LittleEndian(header[22..24]);
         ushort colorDepth = BinaryPrimitives.ReadUInt16LittleEndian(header[24..26]);
                mode       = BinaryPrimitives.ReadUInt16LittleEndian(header[26..28]);
 
@@ -49,8 +49,8 @@ internal static class RdiFormat
         if (width is 0 || height is 0)
             throw new MalformedFileException("Width and height of RDI must be positive");
 
-        if (colorSpace is not (Gray or Rgb or Rgba))
-            throw new VariantNotSupportedException("Unsupported color space for RDI");
+        if (colorModel is not (Gray or Rgb or Rgba))
+            throw new VariantNotSupportedException("Unsupported color model for RDI");
 
         if (colorDepth is not 8)
             throw new VariantNotSupportedException("Unsupported color depth for RDI");
@@ -72,7 +72,7 @@ internal static class RdiFormat
         byte[] raw = GC.AllocateUninitializedArray<byte>((int)size);
         rdiInput.ReadExactly(raw);
 
-        return new((int)width, (int)height, (int)width * colorSpace * (colorDepth / 8), colorSpace, (int)size, raw);
+        return new((int)width, (int)height, (int)width * colorModel * (colorDepth / 8), colorModel, (int)size, raw);
     }
 
     [SkipLocalsInit]
@@ -81,7 +81,7 @@ internal static class RdiFormat
         StreamValidator.EnsureWritable(rdiOutput);
         ArgumentNullException.ThrowIfNull(rawImage.Data);
 
-        var (width, height, _, colorSpace, size, data) = rawImage;
+        var (width, height, _, colorModel, size, data) = rawImage;
 
         if (width is <= 0 || height is <= 0)
             throw new MalformedDataException("Width and height of RDI must be positive");
@@ -92,8 +92,8 @@ internal static class RdiFormat
         if (height is > (int)MaxImageLength)
             throw new ConstraintViolationException($"Height of RDI must not exceed {MaxImageLength}");
 
-        if (colorSpace is not (Gray or Rgb or Rgba))
-            throw new VariantNotSupportedException("Unsupported color space for RDI");
+        if (colorModel is not (Gray or Rgb or Rgba))
+            throw new VariantNotSupportedException("Unsupported color model for RDI");
 
         Span<byte> header = stackalloc byte[BaseHeaderSize];
 
@@ -102,7 +102,7 @@ internal static class RdiFormat
         BinaryPrimitives.WriteUInt32LittleEndian(header[10..14], Offset);
         BinaryPrimitives.WriteUInt32LittleEndian(header[14..18], (uint)width);
         BinaryPrimitives.WriteUInt32LittleEndian(header[18..22], (uint)height);
-        BinaryPrimitives.WriteUInt16LittleEndian(header[22..24], (ushort)colorSpace);
+        BinaryPrimitives.WriteUInt16LittleEndian(header[22..24], (ushort)colorModel);
         BinaryPrimitives.WriteUInt16LittleEndian(header[24..26], 8);
         BinaryPrimitives.WriteUInt16LittleEndian(header[26..28], mode);
 

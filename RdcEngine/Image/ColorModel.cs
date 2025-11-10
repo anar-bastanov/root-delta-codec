@@ -1,6 +1,6 @@
 ﻿namespace RdcEngine.Image;
 
-internal static class ColorSpace
+internal static class ColorModel
 {
     public const int Gray = 1;
 

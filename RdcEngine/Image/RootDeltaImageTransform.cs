@@ -14,16 +14,16 @@ internal static class RootDeltaImageTransform
         if (mode is 0)
             mode = ImageTransformImpl.DefaultMode;
 
-        var (_, _, _, colorSpace, _, _) = rawImage;
-        var impl = GetImplementation(mode, colorSpace);
+        var (_, _, _, colorModel, _, _) = rawImage;
+        var impl = GetImplementation(mode, colorModel);
 
         return impl.Encode(rawImage);
     }
 
     public static RawImage Decode(RawImage rawImage, ushort mode)
     {
-        var (width, height, _, colorSpace, size, _) = rawImage;
-        var impl = GetImplementation(mode, colorSpace);
+        var (width, height, _, colorModel, size, _) = rawImage;
+        var impl = GetImplementation(mode, colorModel);
 
         if (impl.ComputeLength(width, height) > size)
             throw new MalformedFileException("RDI file has incomplete pixel data");
@@ -31,11 +31,11 @@ internal static class RootDeltaImageTransform
         return impl.Decode(rawImage);
     }
 
-    private static ImageTransformImpl GetImplementation(ushort mode, int colorSpace)
+    private static ImageTransformImpl GetImplementation(ushort mode, int colorModel)
     {
-        int key = (colorSpace << 16) | (mode << 0);
+        int key = (colorModel << 16) | (mode << 0);
         ref var t = ref CollectionsMarshal.GetValueRefOrAddDefault(Implementations, key, out _);
 
-        return t ??= ImageTransformImpl.Resolve(mode, colorSpace);
+        return t ??= ImageTransformImpl.Resolve(mode, colorModel);
     }
 }

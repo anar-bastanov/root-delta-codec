@@ -1,5 +1,5 @@
 ﻿using RdcEngine.Exceptions;
-using static RdcEngine.Image.ColorSpace;
+using static RdcEngine.Image.ColorModel;
 
 namespace RdcEngine.Image.Implementations;
 
@@ -13,15 +13,15 @@ internal abstract partial class ImageTransformImpl
 
     public abstract int ComputeLength(int width, int height);
 
-    public static ImageTransformImpl Resolve(ushort mode, int colorSpace)
+    public static ImageTransformImpl Resolve(ushort mode, int colorModel)
     {
         if (mode is ushort.MaxValue)
             throw new CodecException("Invalid RDI encoding mode");
 
-        if (colorSpace is not (Gray or Rgb or Rgba))
-            throw new VariantNotSupportedException("Invalid color space for RDI");
+        if (colorModel is not (Gray or Rgb or Rgba))
+            throw new VariantNotSupportedException("Invalid color model for RDI");
 
-        ImageTransformImpl impl = (mode, colorSpace) switch
+        ImageTransformImpl impl = (mode, colorModel) switch
         {
             (1, _) => ObsoleteMode(),
 
@@ -61,14 +61,14 @@ internal abstract partial class ImageTransformImpl
             throw new VariantNotSupportedException("Obsolete RDI encoding mode");
 
         static ImageTransformImpl GrayNotSupported() =>
-            throw new VariantNotSupportedException("Gray color space is not supported for given RDI encoding mode");
+            throw new VariantNotSupportedException("Gray color model is not supported for given RDI encoding mode");
 
 #pragma warning disable CS8321 // Local function is declared but never used
         static ImageTransformImpl RgbNotSupported() =>
-            throw new VariantNotSupportedException("RGB color space is not supported for given RDI encoding mode");
+            throw new VariantNotSupportedException("RGB color model is not supported for given RDI encoding mode");
 
         static ImageTransformImpl RgbaNotSupported() =>
-            throw new VariantNotSupportedException("RGBA color space is not supported for given RDI encoding mode");
+            throw new VariantNotSupportedException("RGBA color model is not supported for given RDI encoding mode");
 #pragma warning restore CS8321
     }
 }
