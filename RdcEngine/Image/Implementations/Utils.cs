@@ -1,4 +1,6 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace RdcEngine.Image.Implementations;
 
@@ -6,91 +8,85 @@ internal abstract partial class ImageTransformImpl
 {
     private static class Utils
     {
+        private static ReadOnlySpan<byte> D2RD =>
+        [
+            01, 02, 02, 03, 03, 03, 03, 04, 04, 04, 04, 04, 04, 04, 04, 05, 05, 05, 05, 05, 05, 05, 05, 05,
+            05, 05, 05, 05, 05, 05, 05, 06, 06, 06, 06, 06, 06, 06, 06, 06, 06, 06, 06, 06, 06, 06, 06, 06,
+            06, 06, 06, 06, 06, 06, 06, 06, 06, 06, 06, 06, 06, 06, 06, 07, 07, 07, 07, 07, 07, 07, 07, 07,
+            07, 07, 07, 07, 07, 07, 07, 07, 07, 07, 07, 07, 07, 07, 07, 07, 07, 07, 07, 07, 07, 07, 07, 08,
+            08, 08, 08, 08, 08, 08, 08, 08, 08, 08, 08, 08, 08, 08, 08, 08, 08, 08, 08, 08, 08, 08, 08, 08,
+            08, 08, 08, 08, 08, 08, 08, 08, 09, 09, 09, 09, 09, 09, 09, 09, 09, 09, 09, 09, 09, 09, 09, 09,
+            09, 09, 09, 09, 09, 09, 09, 09, 09, 09, 09, 09, 09, 09, 09, 09, 09, 10, 10, 10, 10, 10, 10, 10,
+            10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+            10, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11,
+            11, 11, 11, 11, 11, 11, 11, 11, 11, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12,
+            12, 13, 13, 13, 13, 13, 13, 13, 13, 14, 14, 14, 14, 15, 15, 00, 01, 01, 02, 02, 02, 02, 03, 03,
+            03, 03, 03, 03, 03, 03, 04, 04, 04, 04, 04, 04, 04, 04, 04, 04, 04, 04, 04, 04, 04, 04, 05, 05,
+            05, 05, 05, 05, 05, 05, 05, 05, 05, 05, 05, 05, 05, 05, 05, 05, 05, 05, 05, 05, 05, 05, 05, 05,
+            05, 05, 05, 05, 05, 05, 06, 06, 06, 06, 06, 06, 06, 06, 06, 06, 06, 06, 06, 06, 06, 06, 06, 06,
+            06, 06, 06, 06, 06, 06, 06, 06, 06, 06, 06, 06, 06, 06, 07, 07, 07, 07, 07, 07, 07, 07, 07, 07,
+            07, 07, 07, 07, 07, 07, 07, 07, 07, 07, 07, 07, 07, 07, 07, 07, 07, 07, 07, 07, 07, 07, 07, 08,
+            08, 08, 08, 08, 08, 08, 08, 08, 08, 08, 08, 08, 08, 08, 08, 08, 08, 08, 08, 08, 08, 08, 08, 08,
+            08, 08, 08, 08, 08, 08, 08, 08, 09, 09, 09, 09, 09, 09, 09, 09, 09, 09, 09, 09, 09, 09, 09, 09,
+            09, 09, 09, 09, 09, 09, 09, 09, 09, 09, 09, 09, 09, 09, 09, 09, 10, 10, 10, 10, 10, 10, 10, 10,
+            10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+            11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 12, 12, 12, 12, 12, 12, 12, 12,
+            13, 13, 13, 13, 14, 14, 15
+        ];
+
+        private static ReadOnlySpan<byte> RD2D =>
+        [
+            0, 1, 3, 7, 15, 31, 63, 95, 128, 161, 193, 225, 241, 249, 253, 255
+        ];
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static byte ToRootDelta(byte x, byte y)
         {
-            return (y - x) switch
-            {
-                0 => 0b0000,
+            ref byte lut = ref MemoryMarshal.GetReference(D2RD);
+            ref byte @base = ref Unsafe.Add(ref lut, 255);
+            nint index = (nint)y - x;
 
-                >= +255 => 0b1111,
-                >= +253 => 0b1110,
-                >= +249 => 0b1101,
-                >= +241 => 0b1100,
-                >= +225 => 0b1011,
-                >= +193 => 0b1010,
-                >= +161 => 0b1001,
-                >= +128 => 0b1000,
-                >= +95  => 0b0111,
-                >= +63  => 0b0110,
-                >= +31  => 0b0101,
-                >= +15  => 0b0100,
-                >= +7   => 0b0011,
-                >= +3   => 0b0010,
-                >= +1   => 0b0001,
-
-                <= -255 => 0b0001,
-                <= -253 => 0b0010,
-                <= -249 => 0b0011,
-                <= -241 => 0b0100,
-                <= -225 => 0b0101,
-                <= -193 => 0b0110,
-                <= -161 => 0b0111,
-                <= -128 => 0b1000,
-                <= -95  => 0b1001,
-                <= -63  => 0b1010,
-                <= -31  => 0b1011,
-                <= -15  => 0b1100,
-                <= -7   => 0b1101,
-                <= -3   => 0b1110,
-                <= -1   => 0b1111
-            };
+            return Unsafe.Add(ref @base, index);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static byte FromRootDelta(byte delta)
         {
-            return (delta & 0x0F) switch
-            {
-                0b0000 => 0,
-                0b0001 => 1,
-                0b0010 => 3,
-                0b0011 => 7,
-                0b0100 => 15,
-                0b0101 => 31,
-                0b0110 => 63,
-                0b0111 => 95,
-                0b1000 => 128,
-                0b1001 => 161,
-                0b1010 => 193,
-                0b1011 => 225,
-                0b1100 => 241,
-                0b1101 => 249,
-                0b1110 => 253,
-                0b1111 => 255,
-                _ => throw new UnreachableException()
-            };
+            ref byte lut = ref MemoryMarshal.GetReference(RD2D);
+            nint index = (nint)delta & 0x0F;
+
+            return Unsafe.Add(ref lut, index);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static (byte Y, byte Co, byte Cg) RgbToYCoCg(byte r, byte g, byte b)
         {
-            int y = (2 * g + r + b + 1) >> 2;
-            int co = ((r - b) >> 1) + 128;
-            int cg = ((2 * g - r - b + 1) >> 2) + 128;
+            int y  = (g + g + r + b + 2 +   0) / 4;
+            int co = (      + r - b + 0 + 256) / 2;
+            int cg = (g + g - r - b + 1 + 512) / 4;
 
-            return (ClampToByte(y), ClampToByte(co), ClampToByte(cg));
+            return ((byte)y, (byte)co, (byte)cg);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static (byte R, byte G, byte B) YCoCgToRgb(byte y, byte co, byte cg)
         {
-            int r = y + co - cg;
-            int g = y + cg - 128;
+            int r = y + co - cg +   0;
+            int g = y      + cg - 128;
             int b = y - co - cg + 256;
 
             return (ClampToByte(r), ClampToByte(g), ClampToByte(b));
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static byte ClampToByte(int value)
         {
-            return (byte)(value < 0 ? 0 : value > 255 ? 255 : value);
+            return (byte)(value switch
+            {
+                < 0 => 0,
+                > 255 => 255,
+                _ => value
+            });
         }
     }
 }

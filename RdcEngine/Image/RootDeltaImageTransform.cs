@@ -9,26 +9,33 @@ internal static class RootDeltaImageTransform
 {
     private static readonly Dictionary<int, ImageTransformImpl> Implementations = [];
 
-    public static RawImage Encode(RawImage rawImage, ushort mode)
+    public static RawImage Encode(RawImage bmp, ref ushort mode)
     {
         if (mode is 0)
             mode = ImageTransformImpl.DefaultMode;
 
-        var (_, _, _, colorModel, _, _) = rawImage;
-        var impl = GetImplementation(mode, colorModel);
+        var impl = GetImplementation(mode, bmp.ColorModel);
 
-        return impl.Encode(rawImage);
+        RawImage rdi = impl.Encode(bmp);
+
+        (rdi.Data, rdi.Size) = RawDataCompressor.Compress(rdi.Data, rdi.Size);
+
+        return rdi;
     }
 
-    public static RawImage Decode(RawImage rawImage, ushort mode)
+    public static RawImage Decode(RawImage rdi, ushort mode)
     {
-        var (width, height, _, colorModel, size, _) = rawImage;
-        var impl = GetImplementation(mode, colorModel);
+        var impl = GetImplementation(mode, rdi.ColorModel);
+        int requiredLength = impl.ComputeLength(rdi.Width, rdi.Height);
 
-        if (impl.ComputeLength(width, height) > size)
+        (rdi.Data, rdi.Size) = RawDataCompressor.Decompress(rdi.Data, rdi.Size, capacity: requiredLength);
+
+        if (rdi.Size < requiredLength)
             throw new MalformedFileException("RDI file has incomplete pixel data");
 
-        return impl.Decode(rawImage);
+        RawImage bmp = impl.Decode(rdi);
+
+        return bmp;
     }
 
     private static ImageTransformImpl GetImplementation(ushort mode, int colorModel)

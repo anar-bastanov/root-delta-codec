@@ -12,11 +12,10 @@ public static class ImageCodec
         StreamValidator.EnsureWritable(rdiOutput);
         StreamValidator.EnsureNotSame(bmpInput, rdiOutput);
 
-        RawImage bmpRawImage = BmpFormat.Load(bmpInput);
-        RawImage rdiRawImage = RootDeltaImageTransform.Encode(bmpRawImage, mode);
+        RawImage bmp = BmpFormat.Load(bmpInput);
+        RawImage rdi = RootDeltaImageTransform.Encode(bmp, ref mode);
 
-        (rdiRawImage.Data, rdiRawImage.Size) = RawDataCompressor.Compress(rdiRawImage.Data, rdiRawImage.Size);
-        RdiFormat.Save(rdiRawImage, rdiOutput, mode);
+        RdiFormat.Save(rdi, rdiOutput, mode);
     }
 
     public static void DecodeBmp(Stream rdiInput, Stream bmpOutput)
@@ -25,10 +24,9 @@ public static class ImageCodec
         StreamValidator.EnsureWritable(bmpOutput);
         StreamValidator.EnsureNotSame(rdiInput, bmpOutput);
 
-        RawImage rdiRawImage = RdiFormat.Load(rdiInput, out ushort mode);
-        (rdiRawImage.Data, rdiRawImage.Size) = RawDataCompressor.Decompress(rdiRawImage.Data, rdiRawImage.Size);
+        RawImage rdi = RdiFormat.Load(rdiInput, out ushort mode);
+        RawImage bmp = RootDeltaImageTransform.Decode(rdi, mode);
 
-        RawImage bmpRawImage = RootDeltaImageTransform.Decode(rdiRawImage, mode);
-        BmpFormat.Save(bmpRawImage, bmpOutput);
+        BmpFormat.Save(bmp, bmpOutput);
     }
 }
