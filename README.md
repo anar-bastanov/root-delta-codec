@@ -16,30 +16,28 @@ The framework defines a family of formats including:
 
 You can build `RDC` from source or download prebuilt binaries from the latest [GitHub Releases](https://github.com/anar-bastanov/root-delta-codec/releases).
 
-To build `RDC` from source, ensure you have the [.NET 9 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/9.0) installed.
+To build `RDC` from source, ensure you have the [.NET 10 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/10.0) installed.
 
 Run the following commands from the root of the repository to restore dependencies and publish the project:
 
 ### Windows
 
 ```bash
-dotnet restore
-dotnet publish ./RootDeltaCodec.sln -c Release -r win-x64 --self-contained true /p:PublishAot=true /p:PublishTrimmed=true /p:TrimMode=link
+dotnet publish ./RdcCli/RdcCli.csproj -c Release -r win-x64
 ```
 
 ### Linux
 
 ```bash
-dotnet restore
-dotnet publish ./RootDeltaCodec.sln -c Release -r linux-x64 --self-contained true /p:PublishAot=true /p:PublishTrimmed=true /p:TrimMode=link
+dotnet publish ./RdcCli/RdcCli.csproj -c Release -r linux-x64
 ```
 
 ### Output
 
 After publishing, the executable will be located at:
 
-- `./bin/Release/net9.0/win-x64/publish/rdc.exe` (Windows)
-- `./bin/Release/net9.0/linux-x64/publish/rdc` (Linux)
+- `./bin/Release/net10.0/win-x64/publish/rdc.exe` (Windows)
+- `./bin/Release/net10.0/linux-x64/publish/rdc` (Linux)
 
 ## Usage
 
@@ -98,5 +96,5 @@ using RdcEngine.Image;
 
 ## License
 
-Copyright © 2025 Anar Bastanov  
+Copyright &copy; 2025 Anar Bastanov  
 Distributed under the [MIT License](http://www.opensource.org/licenses/mit-license.php).
