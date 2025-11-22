@@ -75,8 +75,8 @@ internal abstract partial class ImageTransformImpl
                 var (_, co10, cg10) = Utils.RgbToYCoCg(data[off10 + 2], data[off10 + 1], data[off10 + 0]);
                 var (_, co11, cg11) = Utils.RgbToYCoCg(data[off11 + 2], data[off11 + 1], data[off11 + 0]);
 
-                byte co = (byte)((co00 + co01 + co10 + co11) / 4);
-                byte cg = (byte)((cg00 + cg01 + cg10 + cg11) / 4);
+                byte co = (byte)((co00 + co01 + co10 + co11 + 2) / 4);
+                byte cg = (byte)((cg00 + cg01 + cg10 + cg11 + 2) / 4);
 
                 rdi[offCo1 + y] = co;
                 rdi[offCg1 + y] = cg;
@@ -96,8 +96,8 @@ internal abstract partial class ImageTransformImpl
                     (_, co10, cg10) = Utils.RgbToYCoCg(data[off10 + 2], data[off10 + 1], data[off10 + 0]);
                     (_, co11, cg11) = Utils.RgbToYCoCg(data[off11 + 2], data[off11 + 1], data[off11 + 0]);
 
-                    byte con = (byte)((co00 + co01 + co10 + co11) / 4);
-                    byte cgn = (byte)((cg00 + cg01 + cg10 + cg11) / 4);
+                    byte con = (byte)((co00 + co01 + co10 + co11 + 2) / 4);
+                    byte cgn = (byte)((cg00 + cg01 + cg10 + cg11 + 2) / 4);
 
                     byte cod = Utils.ToRootDelta(co, con);
                     byte cgd = Utils.ToRootDelta(cg, cgn);
