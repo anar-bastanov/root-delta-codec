@@ -10,7 +10,7 @@ The framework defines a family of formats including:
 - `RDAI` – Root Delta Animated Image
 
 > [!WARNING]
-> *This project is under active development and not ready for general use.*
+> This project is under active development and not ready for general use.
 
 ## Installation & Build Instructions
 
@@ -92,9 +92,9 @@ using RdcEngine.Image;
 | Video/Audio/GIF | `RDV`, `RDA`, `RDAI` | Planned   |
 
 > [!TIP]
-> *You can use tools like `ffmpeg` or other image converters to transform unsupported file types (e.g., `PNG` to `BMP`) before encoding, or back again (`BMP` to `PNG`) after decoding.*
+> You can use tools like `ffmpeg` or other image converters to transform unsupported file types (e.g., `PNG` to `BMP`) before encoding, or back again (`BMP` to `PNG`) after decoding.
 
 ## License
 
-Copyright &copy; 2025 Anar Bastanov  
+Copyright &copy; 2025 Anar Bastanov <br>
 Distributed under the [MIT License](http://www.opensource.org/licenses/mit-license.php).

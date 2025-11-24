@@ -46,19 +46,19 @@ The following documents are normative and govern interpretation of requirements 
 
 This section defines terminology and general conventions used throughout this specification:
 
-* Little-endian — Multi-byte integer fields are stored least-significant byte first, unless stated otherwise.
-* Integer fields — Unless otherwise stated, all integer fields are unsigned and represent non-negative values.
-* Conformance language — Normative terms MUST, SHOULD, and MAY are to be interpreted as defined in RFC 2119.
-* Transform output — The uncompressed byte sequence produced by a transform algorithm; it is not raw pixel data unless a transform specifically defines that mapping.
-* File size — The total number of bytes in the RDI file.
+* Little-endian: Multi-byte integer fields are stored least-significant byte first, unless stated otherwise.
+* Integer fields: Unless otherwise stated, all integer fields are unsigned and represent non-negative values.
+* Conformance language: Normative terms MUST, SHOULD, and MAY are to be interpreted as defined in RFC 2119.
+* Transform output: The uncompressed byte sequence produced by a transform algorithm; it is not raw pixel data unless a transform specifically defines that mapping.
+* File size: The total number of bytes in the RDI file.
 
 ## 4. File Layout
 
 An RDI file consists of three primary regions arranged sequentially:
 
-1. Header — A fixed-length structure containing all metadata required to interpret the Payload.
-2. Gap Region — An implementation-defined block of bytes immediately following the Header.
-3. Payload — The remaining bytes beginning at the offset defined in the Header and continuing to the end of the file.
+1. Header: A fixed-length structure containing all metadata required to interpret the Payload.
+2. Gap Region: An implementation-defined block of bytes immediately following the Header.
+3. Payload: The remaining bytes beginning at the offset defined in the Header and continuing to the end of the file.
 
 ```none
 +------------------------+
@@ -138,18 +138,18 @@ The following table registers valid, obsolete, and reserved Transform Modes toge
 
 | Mode | Status     | Applicable Color Models |
 | ---: | :--------- | :---------------------- |
-|    0 | Reserved   | —                       |
-|    1 | Obsolete   | —                       |
-|    2 | Reserved   | —                       |
-|    3 | Obsolete   | —                       |
-|    4 | Obsolete   | —                       |
+|    0 | Reserved   | N/A                     |
+|    1 | Obsolete   | N/A                     |
+|    2 | Reserved   | N/A                     |
+|    3 | Obsolete   | N/A                     |
+|    4 | Obsolete   | N/A                     |
 |    5 | Registered | GRAY, RGB, RGBA         |
 |    6 | Registered | RGB, RGBA               |
-|    7 | Obsolete   | —                       |
+|    7 | Obsolete   | N/A                     |
 |    8 | Registered | GRAY, RGB, RGBA         |
 |    9 | Registered | RGB, RGBA               |
-|   10 | Obsolete   | —                       |
-|  ... | Reserved   | —                       |
+|   10 | Obsolete   | N/A                     |
+|  ... | Reserved   | N/A                     |
 
 ### 8.1 Shared Primitives
 
@@ -160,7 +160,7 @@ All samples are 8-bit unsigned integers. Unless a Mode states otherwise, arithme
 * Color Model defines channels: GRAY = {Y}, RGB = {R,G,B}, RGBA = {R,G,B,A}.
 * Alpha channel A, if present, is the coverage: 0 = fully transparent, 255 = fully opaque.
 * Color channels MUST NOT be premultiplied by alpha.
-* Channel order is Mode-defined and MUST be stated in each Mode’s layout.
+* Channel order is Mode-defined and MUST be stated in each Mode's layout.
 * This specification does not define transfer functions or chromaticities.
 
 #### 8.1.2 Root Delta Definition
@@ -475,20 +475,20 @@ For each supported Color Model, Mode 9 MUST use the same channel order as Mode 6
 If the image has Width pixels per row, Height rows, and C channels, the transform output MUST contain this many bytes:
 
 ```none
-A := (C - 2) * Height + 2 * SubsampledHeight
-B := (C - 2) * Height * (Width - 1) + 2 * SubsampledHeight * (SubsampledWidth - 1)
-Length = A + (B + 1) / 2
+Tmp1 := (C - 2) * Height + 2 * SubsampledHeight
+Tmp2 := (C - 2) * Height * (Width - 1) + 2 * SubsampledHeight * (SubsampledWidth - 1)
+Length = Tmp1 + (Tmp2 + 1) / 2
 ```
 
-C is the number of channels implied by the Color Model as defined in §8.1.1 and §8.1.6. The subsampled grid size is defined in §8.1.7. Division is integer division with truncation toward zero.
+C is the number of channels implied by the Color Model as defined in §8.1.1 and §8.1.6. Variables named Tmp1 and Tmp2 are for temporary assignments. The subsampled grid size is defined in §8.1.7. Division is integer division with truncation toward zero.
 
 #### 8.5.2 Layout
 
 The transform output consists of a leaders region followed by a packed Root Delta region.
 
-The leaders region for Mode 9 MUST be identical to the leaders region for Mode 6. It MUST contain one byte for each scanline of each channel’s grid, grouped by channel index in ascending order and, within each channel, in scanline order from the top row to the bottom row. Channels that carry Y and A use the full-resolution grid. Channels that carry Co and Cg use the subsampled chroma grid defined in §8.1.7.
+The leaders region for Mode 9 MUST be identical to the leaders region for Mode 6. It MUST contain one byte for each scanline of each channel's grid, grouped by channel index in ascending order and, within each channel, in scanline order from the top row to the bottom row. Channels that carry Y and A use the full-resolution grid. Channels that carry Co and Cg use the subsampled chroma grid defined in §8.1.7.
 
-The packed Root Delta region MUST follow immediately after the leaders region. It MUST store the Root Delta codes for all channels in the same logical channel, scanline, and column order as Mode 6: all non-leader samples of channel 0, then all non-leader samples of channel 1, and so on. For each channel and scanline, there MUST be one Root Delta code for each sample after the first in that channel’s grid.
+The packed Root Delta region MUST follow immediately after the leaders region. It MUST store the Root Delta codes for all channels in the same logical channel, scanline, and column order as Mode 6: all non-leader samples of channel 0, then all non-leader samples of channel 1, and so on. For each channel and scanline, there MUST be one Root Delta code for each sample after the first in that channel's grid.
 
 The Root Delta codes form one linear sequence. The packed Root Delta region MUST store these codes in that sequence order, two codes per byte. The first Root Delta code in the sequence MUST be placed in the low four bits of the first byte. The second code MUST be placed in the high four bits of the first byte. The third code MUST be placed in the low four bits of the next byte, the fourth in the high four bits of that byte, and so on until all codes have been written.
 
@@ -610,12 +610,12 @@ Header (28 bytes) + Gap Region (4 bytes):
 
 The following table summarizes the Modes defined in §8:
 
-| Mode | Color Models    | Luma Grid | Chroma Grid | Root Delta Packing | Notes                    |
-| ---: | :-------------- | :-------- | :---------- | :----------------- | :----------------------- |
-|    5 | GRAY, RGB, RGBA | Full      | Full        | Bytes              | Baseline implementation  |
-|    6 | RGB, RGBA       | Full      | Subsampled  | Bytes              | Chroma subsampled        |
-|    8 | GRAY, RGB, RGBA | Full      | Full        | Packed nibbles     | Packed variant of Mode 5 |
-|    9 | RGB, RGBA       | Full      | Subsampled  | Packed nibbles     | Packed variant of Mode 6 |
+| Mode | Color Models    | Chroma Grid | Root Delta Packing | Notes                    |
+| ---: | :-------------- | :---------- | :----------------- | :----------------------- |
+|    5 | GRAY, RGB, RGBA | Full        | Bytes              | Baseline implementation  |
+|    6 | RGB, RGBA       | Subsampled  | Bytes              | Chroma subsampled        |
+|    8 | GRAY, RGB, RGBA | Full        | Packed nibbles     | Packed variant of Mode 5 |
+|    9 | RGB, RGBA       | Subsampled  | Packed nibbles     | Packed variant of Mode 6 |
 
 ## 13. Informative References
 
