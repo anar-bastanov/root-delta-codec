@@ -3,7 +3,7 @@
     <Authors>Anar Bastanov</Authors>
     <RepositoryUrl>https://github.com/anar-bastanov/root-delta-codec</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-    <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+    <PackageLicenseFile>LICENSE-MIT.txt</PackageLicenseFile>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
   </PropertyGroup>
 </Project>

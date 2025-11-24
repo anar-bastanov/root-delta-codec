@@ -97,4 +97,5 @@ using RdcEngine.Image;
 ## License
 
 Copyright &copy; 2025 Anar Bastanov <br>
-Distributed under the [MIT License](http://www.opensource.org/licenses/mit-license.php).
+Source code is distributed under the [MIT License](LICENSE-MIT.txt). <br>
+Specifications and other documentation are licensed under [CC BY 4.0](LICENSE-CC-BY-4.0.txt).
