@@ -9,68 +9,95 @@ namespace RdcCli;
 
 public sealed class RdcRootCommand : RootCommand
 {
-    public CommandLineConfiguration Config { get; set; }
+    private readonly ParserConfiguration _parserConfiguration;
 
-    public RdcRootCommand() : base()
+    private readonly InvocationConfiguration _invocationConfiguration;
+
+    private RdcRootCommand() : base()
     {
-        Config = new(this);
+        _parserConfiguration = new()
+        {
+            EnablePosixBundling = false
+        };
+
+        _invocationConfiguration = new()
+        {
+            EnableDefaultExceptionHandler = true
+        };
+
         Options[1].Aliases.Add("-v"); // alias for --version option
         Directives.Clear(); // disable suggestion directive
         // cannot disable ugly "Did you mean one of the following?" messages for now...
     }
 
-    public int Invoke(string[] args) => Config.Invoke(args);
+    public int Invoke(string[] args) =>
+        Parse(args, _parserConfiguration).Invoke(_invocationConfiguration);
 
-    public Task<int> InvokeAsync(string[] args) => Config.InvokeAsync(args);
+    public Task<int> InvokeAsync(string[] args) =>
+        Parse(args, _parserConfiguration).InvokeAsync(_invocationConfiguration);
 
     public static RdcRootCommand Build()
     {
-        var encodeCommand = new Command("encode");
-        // encodeCommand.Aliases.Add("-e");
-        // encodeCommand.Aliases.Add("--encode");
-        encodeCommand.Description = "Encode a media file";
-
-        var decodeCommand = new Command("decode");
-        // decodeCommand.Aliases.Add("-d");
-        // decodeCommand.Aliases.Add("--decode");
-        decodeCommand.Description = "Decode a media file";
-
-        var formatsOption = new Option<(string, string)>("--format");
-        formatsOption.Aliases.Add("-f");
-        formatsOption.Description = "Input and output media formats as FROM:TO";
-        formatsOption.Arity = ArgumentArity.ExactlyOne;
-        formatsOption.CustomParser = result =>
+        var root = new RdcRootCommand
         {
-            string value = result.Tokens.Single().Value;
-            var extensions = value.Split(':', 2, StringSplitOptions.TrimEntries);
-
-            return (extensions[0], extensions.Length is 2 ? extensions[1] : "");
+            Description = "Tool for encoding and decoding Root Delta media family",
+            TreatUnmatchedTokensAsErrors = true
         };
 
-        var modeOption = new Option<ushort>("--mode");
-        modeOption.Aliases.Add("-m");
-        modeOption.Description = "Set encoding mode";
-        modeOption.Arity = ArgumentArity.ExactlyOne;
-        modeOption.CustomParser = result =>
+        var encodeCommand = new Command("encode")
         {
-            string value = result.Tokens.Single().Value;
-
-            return ushort.TryParse(value, out ushort mode) ? mode : ushort.MaxValue;
+            Description = "Encode a media file"
         };
 
-        var overwriteOption = new Option<bool>("--overwrite");
-        overwriteOption.Aliases.Add("-w");
-        overwriteOption.Description = "Allow overwriting the output file if it exists";
-        overwriteOption.Arity = ArgumentArity.Zero;
+        var decodeCommand = new Command("decode")
+        {
+            Description = "Decode a media file"
+        };
 
-        var inputArg = new Argument<FileInfo>("input");
-        inputArg.Description = "Input file";
-        inputArg.Arity = ArgumentArity.ExactlyOne;
+        var formatsOption = new Option<(string, string)>("--format", aliases: "-f")
+        {
+            Description = "Input and output media formats as FROM:TO",
+            Arity = ArgumentArity.ExactlyOne,
+            CustomParser = result =>
+            {
+                string value = result.Tokens.Single().Value;
+                var extensions = value.Split(':', 2, StringSplitOptions.TrimEntries);
+
+                return (extensions[0], extensions.Length is 2 ? extensions[1] : "");
+            }
+        };
+
+        var modeOption = new Option<ushort>("--mode", aliases: "-m")
+        {
+            Description = "Set encoding mode",
+            Arity = ArgumentArity.ExactlyOne,
+            CustomParser = result =>
+            {
+                string value = result.Tokens.Single().Value;
+
+                return ushort.TryParse(value, out ushort mode) ? mode : ushort.MaxValue;
+            }
+        };
+
+        var overwriteOption = new Option<bool>("--overwrite", aliases: "-w")
+        {
+            Description = "Allow overwriting the output file if it exists",
+            Arity = ArgumentArity.Zero
+        };
+
+        var inputArg = new Argument<FileInfo>("input")
+        {
+            Description = "Input file",
+            Arity = ArgumentArity.ExactlyOne
+        };
+
+        var outputArg = new Argument<FileInfo?>("output")
+        {
+            Description = "Output file",
+            Arity = ArgumentArity.ZeroOrOne
+        };
+
         inputArg.AcceptExistingOnly();
-
-        var outputArg = new Argument<FileInfo?>("output");
-        outputArg.Description = "Output file";
-        outputArg.Arity = ArgumentArity.ZeroOrOne;
         outputArg.AcceptLegalFilePathsOnly();
 
         encodeCommand.Add(formatsOption);
@@ -84,9 +111,6 @@ public sealed class RdcRootCommand : RootCommand
         decodeCommand.Add(inputArg);
         decodeCommand.Add(outputArg);
 
-        var root = new RdcRootCommand();
-        root.Description = "Tool for encoding and decoding Root Delta media family";
-        root.TreatUnmatchedTokensAsErrors = true;
         root.Add(encodeCommand);
         root.Add(decodeCommand);
 
@@ -110,10 +134,6 @@ public sealed class RdcRootCommand : RootCommand
 
             CommandHandler.RunDecode(formats, input, output, overwrite);
         }));
-
-        var config = root.Config;
-        config.EnablePosixBundling = false;
-        config.EnableDefaultExceptionHandler = true;
 
         return root;
     }
@@ -146,7 +166,7 @@ public sealed class RdcRootCommand : RootCommand
                         if (cliEx.PrintHelp)
                         {
                             Console.Error.WriteLine();
-                            root.Parse("-h").Invoke();
+                            root.Parse("--help").Invoke();
                         }
                         break;
                     case CodecException:
