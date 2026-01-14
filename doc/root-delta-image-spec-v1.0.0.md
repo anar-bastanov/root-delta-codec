@@ -403,7 +403,7 @@ After all pixels have been reconstructed, the resulting image MUST have Width, H
 
 ### 8.4 Mode 8
 
-Mode 8 is a packed variant of Mode 5. It uses the same leader-plus-deltas scanline structure and the same Root Delta codes as Mode 5, but stores those codes as 4-bit values packed two per byte instead of as separate bytes. This reduces the size of the transform output while preserving exactly the same prediction behaviour and per-sample reconstruction as Mode 5.
+Mode 8 is a packed variant of Mode 5. It uses the same leader-plus-deltas scanline structure and the same Root Delta codes as Mode 5, but stores those codes as 4-bit values packed two per byte instead of as separate bytes. This reduces the size of the transform output while preserving exactly the same prediction behavior and per-sample reconstruction as Mode 5.
 
 Mode 8 MUST follow the YCoCg channel usage rules of §8.1.6 and the Root Delta semantics of §8.1.2-§8.1.4. Rows and columns MUST follow the standard image order defined in §8.1. For any given image, an encoder that implements both Modes 5 and 8 MUST produce the same sequence of leaders and Root Delta codes; the only difference between the Modes is how those codes are stored in the transform output.
 
@@ -461,7 +461,7 @@ After all channels have been reconstructed, channel samples MUST be converted ba
 
 ### 8.5 Mode 9
 
-Mode 9 is a packed variant of Mode 6. It uses the same luma and chroma subsampling structure, channel interpretation, and Root Delta codes as Mode 6, but stores those codes as 4-bit values packed two per byte instead of as separate bytes. This reduces the size of the transform output while preserving exactly the same prediction behaviour and per-sample reconstruction as Mode 6.
+Mode 9 is a packed variant of Mode 6. It uses the same luma and chroma subsampling structure, channel interpretation, and Root Delta codes as Mode 6, but stores those codes as 4-bit values packed two per byte instead of as separate bytes. This reduces the size of the transform output while preserving exactly the same prediction behavior and per-sample reconstruction as Mode 6.
 
 Mode 9 MUST follow the YCoCg channel usage rules of §8.1.6, the Root Delta semantics of §8.1.2-§8.1.4, and the chroma subsampling rules of §8.1.7. Rows and columns MUST follow the standard image order defined in §8.1.
 
